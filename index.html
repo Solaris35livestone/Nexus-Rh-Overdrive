@@ -702,7 +702,7 @@ body { overflow-x:hidden; }
       <p style="font-size:0.95rem; margin-bottom:14px; color:var(--text-main);">O Megaboss sobreviveu ao ataque. Suas decisões geraram passivos e insatisfação no setor.</p>
       <div style="background:#0b0f19; padding:12px; border-radius:8px; border:1px solid var(--danger); margin-bottom:16px; text-align:left;">
         <p style="color:var(--danger); font-weight:700;">⚠️ Efeitos do Colapso:</p>
-        <p style="font-size:0.85rem; color:var(--text-muted);">• Penalidade imediata de -15 pts no orçamento acumulado, além do custo operacional de -10.<br>• A equipe deverá explicar à banca como corrigiria os impactos da crise.</p>
+        <p style="font-size:0.85rem; color:var(--text-muted);">• Penalidade imediata de -15 pts no orçamento acumulado, além do custo operacional de -20.<br>• A equipe deverá explicar à banca como corrigiria os impactos da crise.</p>
       </div>
       <button class="btn" style="background:var(--danger); color:#fff; width:100%;" onclick="fecharModal('modal-derrota')">Consultar Resumo das Decisões</button>
     </div>
@@ -767,7 +767,8 @@ body { overflow-x:hidden; }
       <button id="tab-btn-mestre-decisoes" class="tab-btn" onclick="switchMestreTab('mestre-decisoes')">2. Decisões &amp; Alertas</button>
       <button id="tab-btn-mestre-comunicados" class="tab-btn" onclick="switchMestreTab('mestre-comunicados')">3. Comunicados</button>
       <button id="tab-btn-mestre-timer" class="tab-btn" onclick="switchMestreTab('mestre-timer')">4. Tempo</button>
-      <button id="tab-btn-mestre-ranking" class="tab-btn" onclick="switchMestreTab('mestre-ranking')">5. Placar Final &amp; Análise</button>
+      <button id="tab-btn-mestre-avaliacao" class="tab-btn" onclick="switchMestreTab('mestre-avaliacao')">5. Avaliação Híbrida</button>
+      <button id="tab-btn-mestre-ranking" class="tab-btn" onclick="switchMestreTab('mestre-ranking')">6. Placar Final &amp; Análise</button>
     </div>
 
 <div class="card" style="padding:10px 14px;border-left:3px solid var(--cyan);margin:10px 0"><strong>🎓 Missão GP5:</strong> defender decisões salariais com base em responsabilidades, equidade e orçamento.</div>
@@ -813,6 +814,11 @@ body { overflow-x:hidden; }
       </div>
     </div>
 
+    <div id="mestre-avaliacao" class="mestre-tab-content" style="display:none;">
+      <div class="card"><h3 class="title">⚖️ Conselho de Gestão — Avaliação Híbrida</h3>
+      <p class="subtitle">Seis notas independentes (100 pontos). Anna Vivian e Carlos registram os pareceres operacionais. Marciele publica após a conferência. Use a mesma conta Mestre nos dispositivos da banca.</p>
+      <div id="painel-avaliacao-hibrida"></div></div>
+    </div>
     <!-- TAB 4: GERENCIAR COMUNICADOS -->
     <div id="mestre-comunicados" class="mestre-tab-content" style="display:none;">
       <div class="grid">
@@ -1059,7 +1065,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   function cyberConsultaTravada(g,item){return !!(item && ((appState.travasConsultorias||{})[cyberConsultaChave(g,item)] || item.travado));}
   function cyberTeamId(g) { return String((appState.grupos || []).indexOf(g) + 1); }
   function cyberPublicOnly(st) { var x=JSON.parse(JSON.stringify(st||{})); CYBER_PRIVATE_KEYS.concat(CYBER_LOCAL_UI_KEYS).forEach(function(k){delete x[k]});return x; }
-  function cyberPrivateFor(g,st) { var o={_rodadaId:String(st.identificadorSorteioAtual||''),_teamIndex:cyberTeamIndex+1}; CYBER_PRIVATE_KEYS.forEach(function(k){o[k]=((st[k]||{})[g]??null)}); if((st.decisoes||{})[g]){o.resultadoCalculado={pontuacao:(st.pontuacoes||{})[g]||null,orcamento:(st.orcamentosGrupos||{})[g]??null,reserva:!!(st.reservaRHUtilizada||{})[g],penalidade:!!(st.penalidadesGrupos||{})[g]};} return o; }
+  function cyberPrivateFor(g,st) { var o={_rodadaId:String(st.identificadorSorteioAtual||''),_teamIndex:cyberTeamIndex+1}; CYBER_PRIVATE_KEYS.forEach(function(k){o[k]=((st[k]||{})[g]??null)});  return o; }
   function cyberMergeState() {
     if(!cyberPublicState)return;
     var screen=cyberTelaLocal();
@@ -1067,6 +1073,19 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     CYBER_PRIVATE_KEYS.forEach(function(k){appState[k]={}});
     Object.keys(cyberPrivateState).forEach(function(i){if(cyberRole==='equipe' && Number(i)!==cyberTeamIndex+1)return;var g=appState.grupos[Number(i)-1],d=cyberPrivateState[i];if(!g||!d|| (d._teamIndex!=null && Number(d._teamIndex)!==Number(i)))return; CYBER_PRIVATE_KEYS.forEach(function(k){if(k==='historicoDecisoesGrupos'){if(d[k]!=null)appState[k][g]=d[k]}else if(String(d._rodadaId||'')===String(appState.identificadorSorteioAtual||'') && d[k]!=null)appState[k][g]=d[k]})});
     appState.currentScreen=screen;
+    if(cyberRole==='equipe' && cyberTeamIndex>=0){
+      var eg=appState.grupos[cyberTeamIndex],pp=(appState.pontuacoes||{})[eg];
+      if(pp&&pp.publicacaoId){
+        var chave='cyber_gp5_resultado_'+pp.publicacaoId;
+        if(!sessionStorage.getItem(chave)){
+          sessionStorage.setItem(chave,'1');
+          setTimeout(function(){
+            var modal=document.getElementById(pp.resultadoOperacional==='vitoria'?'modal-vitoria':pp.resultadoOperacional==='parcial'?'modal-parcial':'modal-derrota');
+            if(modal && cyberRole==='equipe')modal.classList.add('active');
+          },300);
+        }
+      }
+    }
     snapshotBase=JSON.parse(JSON.stringify(appState));
     sincronizacaoPronta=true;
     atualizarInterface();
@@ -1282,6 +1301,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     temposPitchEquipes: {}, 
     mensagens: [],
     pontuacoes: {},
+    avaliacoesHibridas: {},
     consultas: {},
     penalidadesGrupos: {},
     orcamentosGrupos: {},
@@ -1574,6 +1594,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     appState.consultas = {};
     appState.travasConsultorias = {};
     appState.pontuacoes = {};
+    appState.avaliacoesHibridas = {};
     appState.cronometroCompeticao={etapa:'deliberacao',restante:900,status:'aguardando',terminaEm:0,sorteioId:'',alertas:{}};
     appState.tempoEsgotadoGlobal = false;
     appState.rodadaSalva = false;
@@ -2008,7 +2029,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var cLista = (appState.consultas && appState.consultas[g]) || [];
     var saldo = orcamentoDisponivel(g);
     var elSaldo = document.getElementById('display-saldo-orçamento');
-    if (elSaldo) elSaldo.innerText = 'Orçamento: ' + saldo + ' pts | Reserva RH: ' + (appState.reservaRHUtilizada && appState.reservaRHUtilizada[g] ? 'utilizada' : '15 pts disponíveis (uso único)');
+    if (elSaldo) elSaldo.innerText = 'Orçamento: ' + saldo + ' pts | Reserva RH: ' + (appState.reservaRHUtilizada && appState.reservaRHUtilizada[g] ? 'utilizada' : '20 pts disponíveis (uso único)');
 
     var c = appState.crises && appState.crises[g];
     var container = document.getElementById('container-carta-grupo');
@@ -2141,7 +2162,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var opt2Checked = document.querySelector('input[name="opt_q2_' + g + '"]:checked');
 
     if (!opt1Checked || !opt2Checked) {
-      cyberAlert("Selecione uma opção em cada questão antes de atacar!");
+      cyberAlert("Selecione uma opção em cada questão antes de enviar!");
       return;
     }
 
@@ -2150,90 +2171,43 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var decJust = document.getElementById('decisao-justificativa-pitch');
     var pitchText = decJust ? decJust.value.trim() : '';
 
-    var resultadoCombate = 'colapso';
-    if (opt1.ideal && opt2.ideal) {
-      resultadoCombate = 'vitoria';
-    } else if (opt1.ideal || opt2.ideal) {
-      resultadoCombate = 'parcial';
-    }
+    // Debitar o custo operacional no envio, de forma atômica e uma única vez por rodada.
+    // O resultado da avaliação permanece pendente até a publicação do Mestre.
+    var rodadaEnvio = String(appState.identificadorSorteioAtual || '');
+    if(!sincronizacaoPronta || !window.rtdbRunTransaction){cyberAlert('Aguarde a sincronização com o Firebase.');return;}
+    try {
+      var debito = await window.rtdbRunTransaction(window.rtdbRef(window.db,CYBER_BASE+'/publico'),function(st){
+        if(!st || String(st.identificadorSorteioAtual||'')!==rodadaEnvio || st.rodadaSalva || st.competicaoEncerrada)return;
+        st.custosOperacionaisRodada=st.custosOperacionaisRodada||{};
+        if(st.custosOperacionaisRodada[g] && st.custosOperacionaisRodada[g].rodadaId===rodadaEnvio)return st;
+        st.orcamentosGrupos=st.orcamentosGrupos||{};
+        st.reservaRHUtilizada=st.reservaRHUtilizada||{};
+        var saldo=limitar(st.orcamentosGrupos[g]==null?100:st.orcamentosGrupos[g],0,120);
+        var reserva=false;
+        if(saldo<20 && !st.reservaRHUtilizada[g]){
+          saldo=limitar(saldo+20,0,120);reserva=true;st.reservaRHUtilizada[g]=true;
+        }
+        var implementada=saldo>=20;
+        if(implementada)saldo=limitar(saldo-20,0,120);
+        st.orcamentosGrupos[g]=saldo;
+        st.custosOperacionaisRodada[g]={rodadaId:rodadaEnvio,custo:implementada?20:0,implementada:implementada,reservaAcionada:reserva};
+        return st;
+      },{applyLocally:false});
+      if(!debito.committed){cyberAlert('Não foi possível confirmar o custo operacional. Verifique a rodada.');return;}
+    } catch(e){console.error(e);cyberAlert('Falha ao atualizar o orçamento no Firebase. Tente novamente.');return;}
 
-    var ptsFund = Math.round(((opt1.ptsFund + opt2.ptsFund) / 2) * 50 / 40);
-    var ptsViab = Math.round(((opt1.ptsViab + opt2.ptsViab) / 2) * 40 / 30);
-    var cLista = (appState.consultas && appState.consultas[g]) || [];
-    
-    var saldoAntesBoss = orcamentoDisponivel(g);
-    // Reserva estratégica única por equipe, liberada se o saldo for inferior ao custo de 20 pontos
-    // para financiar a implementação. O usuário confirma a liberação.
-    if (!appState.reservaRHUtilizada) appState.reservaRHUtilizada = {};
-    var reservaAcionada = false;
-    if (saldoAntesBoss < 20 && !appState.reservaRHUtilizada[g]) {
-      if (await cyberConfirm('Orçamento insuficiente para implementar a política de RH. Liberar a reserva estratégica única de 15 pontos para esta equipe?')) {
-        reservaAcionada = true;
-        saldoAntesBoss += 15;
-      }
-    }
-    var implementada = saldoAntesBoss >= 20;
-    if (!implementada && !await cyberConfirm('Sem orçamento suficiente, a política NÃO será implementada. A equipe ainda pode registrar suas respostas, mas terá 0 pontos de recursos e não receberá bônus orçamentário. Continuar?')) return;
-    var impactoBoss = resultadoCombate === 'vitoria' ? 10 : (resultadoCombate === 'parcial' ? 5 : -15);
-    // Custo operacional fixo, cobrado uma única vez na submissão de cada equipe.
-    var custoOperacional = 20;
-    // Resultado positivo só gera retorno se a estratégia foi implementada.
-    var impactoEfetivo = implementada ? impactoBoss : Math.min(0, impactoBoss);
-    var saldoDepoisBoss = limitar(saldoAntesBoss - (implementada ? custoOperacional : 0) + impactoEfetivo,0,120);
-    var ptsSaldo = implementada ? notaRecursos(saldoDepoisBoss) : 0;
-
-    var bossElement = document.getElementById('boss-card-element');
-    if (bossElement) {
-      if (resultadoCombate === 'vitoria') bossElement.classList.add('damage-shake');
-      else if (resultadoCombate === 'parcial') bossElement.classList.add('damage-shake-partial');
-      else bossElement.classList.add('damage-shake');
-    }
-
-    var rodadaEnvio=String(appState.identificadorSorteioAtual||'');
-    setTimeout(function() {
-      if (appState.rodadaSalva || appState.competicaoEncerrada || grupoAtivo !== g || String(appState.identificadorSorteioAtual||'')!==rodadaEnvio) {cyberAlert('Envio cancelado: rodada alterada.');return;}
-      if (bossElement) {
-        bossElement.classList.remove('damage-shake');
-        bossElement.classList.remove('damage-shake-partial');
-      }
-
-      if (!appState.decisoes) appState.decisoes = {};
-      appState.decisoes[g] = { q1Texto: opt1.texto, q2Texto: opt2.texto, pitchText: pitchText, resultado: resultadoCombate, implementada: implementada, reservaAcionada: reservaAcionada, eliminado: resultadoCombate === 'vitoria', totalAuto: ptsFund + ptsViab + ptsSaldo };
-
-      if (!appState.historicoDecisoesGrupos) appState.historicoDecisoesGrupos = {};
-      if (!appState.historicoDecisoesGrupos[g]) appState.historicoDecisoesGrupos[g] = [];
-      appState.historicoDecisoesGrupos[g].push({ cartaTitulo: c.titulo, q1Texto: opt1.texto, q2Texto: opt2.texto, pitchText: pitchText, resultado: resultadoCombate, implementada: implementada, reservaAcionada: reservaAcionada });
-
-      // Consolida os gastos de consultoria e o resultado da crise no saldo persistente.
-      if (!appState.orcamentosGrupos) appState.orcamentosGrupos = {};
-      if (!appState.reservaRHUtilizada) appState.reservaRHUtilizada = {};
-      appState.orcamentosGrupos[g] = saldoDepoisBoss;
-      if (reservaAcionada) appState.reservaRHUtilizada[g] = true;
-      if (!appState.penalidadesGrupos) appState.penalidadesGrupos = {};
-      appState.penalidadesGrupos[g] = resultadoCombate === 'colapso';
-      if (!appState.pontuacoes) appState.pontuacoes = {};
-      var base = { fund: ptsFund, viab: ptsViab, saldo: ptsSaldo,
-        impactoOrcamento: impactoEfetivo, implementada: implementada, reservaAcionada: reservaAcionada,
-        orcamentoFinal: saldoDepoisBoss, custoOperacional: custoOperacional };
-      var calculada = pontuacaoCalculada(base);
-      appState.pontuacoes[g] = Object.assign({}, base, { total: calculada.total });
-      // Historico de consultas preservado; os custos ja foram incorporados ao saldo.
-
-      guardarEstado();
-      verificarEncerramentoDeliberacao();
-      atualizarInterface();
-
-      if (resultadoCombate === 'vitoria') {
-        var modalV = document.getElementById('modal-vitoria');
-        if (modalV) modalV.classList.add('active');
-      } else if (resultadoCombate === 'parcial') {
-        var modalP = document.getElementById('modal-parcial');
-        if (modalP) modalP.classList.add('active');
-      } else {
-        var modalD = document.getElementById('modal-derrota');
-        if (modalD) modalD.classList.add('active');
-      }
-    }, 600);
+    if (!appState.decisoes) appState.decisoes = {};
+    appState.decisoes[g] = {
+      q1Texto:opt1.texto, q2Texto:opt2.texto, pitchText:pitchText,
+      resultado:'pendente', statusAvaliacao:'aguardando', rodadaId:rodadaEnvio
+    };
+    if (!appState.historicoDecisoesGrupos) appState.historicoDecisoesGrupos = {};
+    if (!appState.historicoDecisoesGrupos[g]) appState.historicoDecisoesGrupos[g] = [];
+    appState.historicoDecisoesGrupos[g].push({cartaTitulo:c.titulo,q1Texto:opt1.texto,q2Texto:opt2.texto,pitchText:pitchText,resultado:'pendente',rodadaId:rodadaEnvio});
+    guardarEstado();
+    verificarEncerramentoDeliberacao();
+    atualizarInterface();
+    cyberAlert('Decisão registrada! Custo operacional atualizado no orçamento. Aguardando avaliação do Conselho de Gestão.');
   }
 
   // Guia pedagogico revelado apenas apos a submissao da carta.
@@ -2319,13 +2293,16 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     if (!container) return;
     var html = '';
     appState.grupos.forEach(function(g) {
-      var d = appState.decisoes && appState.decisoes[g];
+      var indiceEquipe=(appState.grupos||[]).indexOf(g)+1;
+      var privado=cyberPrivateState[String(indiceEquipe)]||{};
+      var d = (appState.decisoes && appState.decisoes[g]) || (String(privado._rodadaId||'')===String(appState.identificadorSorteioAtual||'')?privado.decisoes:null);
       var c = appState.crises && appState.crises[g];
       var resultado = d ? d.resultado : '';
       var status = !d ? '<span class="badge badge-warning">Aguardando resposta</span>' :
         resultado === 'vitoria' ? '<span class="badge badge-success">Vitória · +10 orçamento</span>' :
         resultado === 'parcial' ? '<span class="badge badge-warning">Mitigação · +5 orçamento</span>' :
-        '<span class="badge badge-danger">Colapso · −15 orçamento</span>';
+        resultado === 'colapso' ? '<span class="badge badge-danger">Colapso · −15 orçamento</span>' :
+        '<span class="badge badge-warning">Aguardando avaliação</span>';
       var titulo = c && c.titulo ? escaparHTML(c.titulo) : 'Carta não sorteada';
       var emoji = c && c.emoji ? c.emoji : '📋';
       html += '<article class="decisao-monitor-card">' +
@@ -2787,6 +2764,181 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   }
   setInterval(atualizarTimerCompartilhado,500);
 
+  // Matriz objetiva de cinco verificações, aplicável às seis cartas.
+  var CRITERIOS_GP5 = [
+    {id:'marciele',nome:'Marciele',rotulo:'Diagnóstico do problema',max:20},
+    {id:'guilherme',nome:'Guilherme',rotulo:'Fundamentação técnica',max:25},
+    {id:'ana',nome:'Ana Jully',rotulo:'Equidade e impactos humanos',max:20},
+    {id:'anna',nome:'Anna Vivian',rotulo:'Viabilidade financeira',max:20},
+    {id:'carlos',nome:'Carlos Alberto',rotulo:'Riscos e implantação',max:10},
+    {id:'luiza',nome:'Luiza',rotulo:'Coerência da justificativa',max:5}
+  ];
+  var VERIFICACOES_GP5 = [
+    'Resolução do problema central','Recursos financeiros e limites da carta',
+    'Direitos e equidade','Riscos críticos e contenção','Plano de implantação'
+  ];
+  function avaliacaoGP5(g){return ((appState.avaliacoesHibridas||{})[g])||{};}
+  function decisaoPrivadaGP5(g){
+    var i=(appState.grupos||[]).indexOf(g)+1;
+    var d=cyberPrivateState[String(i)]||{};
+    return String(d._rodadaId||'')===String(appState.identificadorSorteioAtual||'')?d.decisoes:null;
+  }
+  function conclusaoGP5(a){
+    var v=a.verificacoes||{};
+    if(VERIFICACOES_GP5.some(function(_,i){return !['sim','parcial','nao'].includes(v[i]);}))return 'incompleta';
+    if(a.impedimentoCritico || VERIFICACOES_GP5.some(function(_,i){return v[i]==='nao';}))return 'colapso';
+    return VERIFICACOES_GP5.some(function(_,i){return v[i]==='parcial';})?'parcial':'vitoria';
+  }
+  // Identidade de trabalho local: reduz erros de edição, mas não substitui autenticação no Firebase.
+  var gp5EditorId=sessionStorage.getItem('gp5_avaliador_ativo')||'';
+  var gp5Dirty={};
+  function gp5SelecionarAvaliador(id){
+    if(Object.values(gp5Dirty).some(Boolean)&&!confirm('Há alterações não salvas. Deseja descartá-las?')){var e=document.getElementById('gp5-editor');if(e)e.value=gp5EditorId;return;}gp5Dirty={};gp5EditorId=id;sessionStorage.setItem('gp5_avaliador_ativo',id);
+    renderAvaliacaoHibrida();
+  }
+  function gp5MarcarAlterado(i){gp5Dirty[i]=true;}
+  function gp5Carta(g){
+    var crise=(appState.crises||{})[g]||{};
+    return CARTAS_CRISE.find(function(c){return c.id===crise.id||c.titulo===crise.titulo;})||null;
+  }
+  function renderAvaliacaoHibrida(){
+    var el=document.getElementById('painel-avaliacao-hibrida');if(!el||cyberRole!=='mestre')return;
+    // Não recriar inputs com edição pendente, mesmo quando o Firebase atualizar.
+    if(Object.values(gp5Dirty).some(Boolean))return;
+    var html='<div class="card" style="margin:12px 0"><label for="gp5-editor">Quem está avaliando neste dispositivo?</label><select id="gp5-editor" onchange="gp5SelecionarAvaliador(this.value)"><option value="">Selecione o avaliador</option>';
+    CRITERIOS_GP5.forEach(function(c){html+='<option value="'+c.id+'" '+(gp5EditorId===c.id?'selected':'')+'>'+escaparHTML(c.nome)+' — '+escaparHTML(c.rotulo)+'</option>';});
+    html+='</select><p class="subtitle">Cada avaliador edita somente seu próprio critério. A identificação local não é uma proteção de acesso; para isso são necessárias regras de autenticação no Firebase.</p></div>';
+    (appState.grupos||[]).forEach(function(g,i){
+      var d=decisaoPrivadaGP5(g),a=avaliacaoGP5(g),pub=(appState.pontuacoes||{})[g];
+      var carta=gp5Carta(g),titulo=((appState.crises||{})[g]||{}).titulo||'Carta não sorteada';
+      var feitas=CRITERIOS_GP5.filter(function(c){var reg=(a.notas||{})[c.id];return reg&&reg.nota!==null&&reg.nota!==undefined&&Number.isFinite(Number(reg.nota));});
+      html+='<section class="decisao-monitor-card" style="margin:12px 0"><h4 style="color:var(--cyan)">'+escaparHTML(g)+'</h4><p>'+escaparHTML(titulo)+'</p>';
+      html+='<p class="subtitle">Avaliações concluídas: <strong>'+feitas.length+'/6</strong> • '+CRITERIOS_GP5.map(function(c){return (feitas.some(function(f){return f.id===c.id;})?'✓ ':'○ ')+escaparHTML(c.nome);}).join(' · ')+'</p>';
+      if(pub&&pub.publicacaoId){html+='<p class="badge badge-success">Publicado • '+Number(pub.total||0)+'/100 • '+escaparHTML(pub.resultadoOperacional||'')+'</p></section>';return;}
+      if(carta){
+        html+='<details style="margin:10px 0"><summary style="cursor:pointer;color:var(--cyan);font-weight:700">Consultar carta completa e alternativas</summary><div style="padding:12px;background:#0a1730;border-radius:8px">';
+        html+='<p><b>Setor:</b> '+escaparHTML(carta.setor||'')+'</p><p><b>Ameaça:</b> '+escaparHTML(carta.ameaca||'')+'</p><p><b>Cenário:</b> '+escaparHTML(carta.desc||'')+'</p>';
+        [1,2].forEach(function(n){html+='<p style="margin-top:10px"><b>'+escaparHTML(carta['q'+n]||'')+'</b></p><ol style="padding-left:20px">';(carta['opts'+n]||[]).forEach(function(o){html+='<li>'+escaparHTML(o.texto||'')+'</li>';});html+='</ol>';});
+        html+='</div></details>';
+      }
+      if(!d){html+='<p class="subtitle">Aguardando resposta privada sincronizada.</p></section>';return;}
+      html+='<div style="margin:12px 0;padding:13px;border:1px solid #35dfff;border-radius:10px;background:#0a1730"><strong style="color:#35dfff">RESPOSTA ENVIADA PELA EQUIPE</strong><p style="margin-top:9px"><b>Decisão imediata:</b> '+escaparHTML(d.q1Texto||'Não informada')+'</p><p style="margin-top:9px"><b>Decisão estrutural:</b> '+escaparHTML(d.q2Texto||'Não informada')+'</p>'+(d.pitchText?'<p style="margin-top:9px"><b>Explicação:</b> '+escaparHTML(d.pitchText)+'</p>':'')+'</div>';
+      var editor=CRITERIOS_GP5.find(function(c){return c.id===gp5EditorId;});
+      if(editor){
+        var reg=(a.notas||{})[editor.id]||{};
+        html+='<div class="form-group"><label>'+escaparHTML(editor.nome)+' — '+escaparHTML(editor.rotulo)+' (0–'+editor.max+')</label><input type="number" min="0" max="'+editor.max+'" step="1" id="gp5-nota-'+i+'-'+editor.id+'" oninput="gp5MarcarAlterado('+i+')" value="'+(reg.nota==null?'':Number(reg.nota))+'" style="max-width:110px"></div>';
+      }else{html+='<p class="subtitle">Selecione seu nome para registrar a nota.</p>';}
+      if(gp5EditorId==='anna'||gp5EditorId==='carlos'){
+        html+='<h4>Conferência operacional</h4>';
+        VERIFICACOES_GP5.forEach(function(nome,j){html+='<div class="form-group"><label>'+escaparHTML(nome)+'</label><select id="gp5-check-'+i+'-'+j+'" onchange="gp5MarcarAlterado('+i+')"><option value="">Selecione...</option>'+[['sim','Atende'],['parcial','Atende parcialmente'],['nao','Não atende']].map(function(op){return '<option value="'+op[0]+'" '+((a.verificacoes||{})[j]===op[0]?'selected':'')+'>'+op[1]+'</option>';}).join('')+'</select></div>';});
+        html+='<label><input type="checkbox" id="gp5-critico-'+i+'" onchange="gp5MarcarAlterado('+i+')" style="width:auto" '+(a.impedimentoCritico?'checked':'')+'> Impedimento crítico comprovado</label><details><summary style="cursor:pointer;color:var(--cyan)">Observação (opcional)</summary><textarea rows="2" id="gp5-parecer-'+i+'" oninput="gp5MarcarAlterado('+i+')" placeholder="Somente quando necessário">'+escaparHTML(a.parecer||'')+'</textarea></details>';
+      }
+      html+='<div class="btn-group">'+(editor?'<button class="btn btn-sec" onclick="salvarAvaliacaoUnicaGP5('+i+')">Salvar minha avaliação</button>':'')+'<button class="btn" onclick="publicarAvaliacaoGP5('+i+')">Marciele: validar e publicar</button></div>';
+      var completas=feitas.length===CRITERIOS_GP5.length;
+      html+='<p class="subtitle">Resultado sugerido: '+conclusaoGP5(a)+(completas?' • total '+CRITERIOS_GP5.reduce(function(s,c){return s+Number(a.notas[c.id].nota);},0)+'/100':'')+'</p></section>';
+    });el.innerHTML=html||'<p>Cadastre as equipes.</p>';
+  }
+  async function salvarAvaliacaoUnicaGP5(i){
+    if(cyberRole!=='mestre'||!sincronizacaoPronta)return;
+    var c=CRITERIOS_GP5.find(function(x){return x.id===gp5EditorId;});
+    if(!c){cyberAlert('Selecione seu nome antes de avaliar.');return;}
+    var g=appState.grupos[i],rodada=String(appState.identificadorSorteioAtual||'');
+    if(!decisaoPrivadaGP5(g)){cyberAlert('A resposta da equipe ainda não chegou.');return;}
+    var campo=document.getElementById('gp5-nota-'+i+'-'+c.id);
+    if(!campo||campo.value.trim()===''){cyberAlert('Preencha sua nota.');return;}
+    var nota=Number(campo.value);
+    if(!Number.isInteger(nota)||nota<0||nota>c.max){cyberAlert('Nota inválida para '+c.nome);return;}
+    var operacao=gp5EditorId==='anna'||gp5EditorId==='carlos',verificacoes={};
+    if(operacao)VERIFICACOES_GP5.forEach(function(_,j){var e=document.getElementById('gp5-check-'+i+'-'+j);if(e&&e.value)verificacoes[j]=e.value;});
+    var critico=operacao?document.getElementById('gp5-critico-'+i).checked:false;
+    var parecer=operacao?(document.getElementById('gp5-parecer-'+i)?.value||'').trim():'';
+    try{
+      var r=await window.rtdbRunTransaction(window.rtdbRef(window.db,CYBER_BASE+'/publico/avaliacoesHibridas/'+g),function(old){
+        old=old||{};if((old.rodadaId&&old.rodadaId!==rodada)||old.publicado)return;
+        old.rodadaId=rodada;old.notas=old.notas||{};
+        old.notas[c.id]={nota:nota,atualizadoEm:new Date().toISOString()};
+        if(operacao){old.verificacoes=old.verificacoes||{};Object.keys(verificacoes).forEach(function(j){old.verificacoes[j]=verificacoes[j];});old.impedimentoCritico=critico;if(parecer)old.parecer=parecer;}
+        return old;
+      },{applyLocally:false});
+      if(!r.committed)throw Error('Rodada encerrada ou avaliação publicada');
+      gp5Dirty[i]=false;cyberAlert('Avaliação de '+c.nome+' salva para '+g+'.');renderAvaliacaoHibrida();
+    }catch(e){console.error(e);cyberAlert('Não foi possível salvar. Os campos foram preservados para tentar novamente.');}
+  }
+  async function salvarNotaGP5(i,id){
+    if(cyberRole!=='mestre'||!sincronizacaoPronta)return;
+    var g=appState.grupos[i],c=CRITERIOS_GP5.find(function(x){return x.id===id;});
+    var inp=document.getElementById('gp5-nota-'+i+'-'+id),v=inp?Number(inp.value):NaN;
+    if(!c||!inp||inp.value.trim()===''||!Number.isInteger(v)||v<0||v>c.max){cyberAlert('Nota inválida para o critério.');return;}
+    if(!decisaoPrivadaGP5(g)){cyberAlert('Resposta ainda não sincronizada.');return;}
+    var rodada=String(appState.identificadorSorteioAtual||'');
+    var path=CYBER_BASE+'/publico/avaliacoesHibridas/'+g;
+    try{
+      var r=await window.rtdbRunTransaction(window.rtdbRef(window.db,path),function(old){
+        old=old||{};if(old.rodadaId&&old.rodadaId!==rodada)return;
+        if(old.publicado)return;
+        old.rodadaId=rodada;old.notas=old.notas||{};
+        old.notas[id]={nota:v,atualizadoEm:new Date().toISOString()};return old;
+      },{applyLocally:false});
+      if(!r.committed)throw Error('Rodada mudou ou avaliação já publicada');
+      cyberAlert('Nota de '+c.nome+' salva.');
+    }catch(e){console.error(e);cyberAlert('Não foi possível salvar a nota.');}
+  }
+  async function salvarParecerGP5(i){
+    if(cyberRole!=='mestre'||!sincronizacaoPronta)return;
+    var g=appState.grupos[i],rodada=String(appState.identificadorSorteioAtual||'');
+    var v={};VERIFICACOES_GP5.forEach(function(_,j){v[j]=document.getElementById('gp5-check-'+i+'-'+j).value;});
+    var parecer=document.getElementById('gp5-parecer-'+i).value.trim();
+    var critico=document.getElementById('gp5-critico-'+i).checked;
+    if(!VERIFICACOES_GP5.every(function(_,j){return v[j];})){cyberAlert('Preencha as cinco verificações e justifique com pelo menos 20 caracteres.');return;}
+    try{
+      var r=await window.rtdbRunTransaction(window.rtdbRef(window.db,CYBER_BASE+'/publico/avaliacoesHibridas/'+g),function(old){
+        old=old||{};if((old.rodadaId&&old.rodadaId!==rodada)||old.publicado)return;
+        old.rodadaId=rodada;old.verificacoes=v;old.impedimentoCritico=critico;old.parecer=parecer;
+        old.parecerFinanceiroPor='Anna Vivian';old.parecerRiscosPor='Carlos Alberto';return old;
+      },{applyLocally:false});
+      if(!r.committed)throw Error('Avaliação fechada');cyberAlert('Parecer operacional registrado.');
+    }catch(e){console.error(e);cyberAlert('Falha ao salvar parecer.');}
+  }
+  async function publicarAvaliacaoGP5(i){
+    if(cyberRole!=='mestre'||!sincronizacaoPronta)return;
+    var g=appState.grupos[i],d=decisaoPrivadaGP5(g),a=avaliacaoGP5(g);
+    if(!d){cyberAlert('Aguardando resposta original da equipe.');return;}
+    if(!CRITERIOS_GP5.every(function(c){return (a.notas||{})[c.id]&&Number.isFinite(Number(a.notas[c.id].nota));})){cyberAlert('As seis notas são obrigatórias.');return;}
+    var resultado=conclusaoGP5(a);
+    if(resultado==='incompleta'){cyberAlert('Complete e salve a conferência operacional.');return;}
+    if(!await cyberConfirm('Marciele confirma a publicação de '+g+'? Nota técnica e consequência operacional serão definitivas nesta rodada.'))return;
+    var rodada=String(appState.identificadorSorteioAtual||'');
+    var consultasDaRodada=((cyberPrivateState[String(i+1)]||{}).consultas||[]).length;
+    try{
+      var r=await window.rtdbRunTransaction(window.rtdbRef(window.db,CYBER_BASE+'/publico'),function(st){
+        if(!st||String(st.identificadorSorteioAtual||'')!==rodada||st.rodadaSalva||st.competicaoEncerrada)return;
+        st.pontuacoes=st.pontuacoes||{};if(st.pontuacoes[g]&&st.pontuacoes[g].publicacaoId)return;
+        var av=(st.avaliacoesHibridas||{})[g];if(!av||av.rodadaId!==rodada||av.publicado)return;
+        if(!CRITERIOS_GP5.every(function(c){return av.notas&&av.notas[c.id]&&Number.isInteger(Number(av.notas[c.id].nota))&&Number(av.notas[c.id].nota)>=0&&Number(av.notas[c.id].nota)<=c.max;}))return;
+        var res=conclusaoGP5(av);if(res==='incompleta')return;
+        st.orcamentosGrupos=st.orcamentosGrupos||{};st.reservaRHUtilizada=st.reservaRHUtilizada||{};
+        var registro=((st.custosOperacionaisRodada||{})[g]||{});
+        if(registro.rodadaId!==rodada)return; // O envio precisa ter registrado o débito.
+        var saldo=limitar((st.orcamentosGrupos[g]==null?100:st.orcamentosGrupos[g])-consultasDaRodada*5,0,120);
+        var reserva=!!registro.reservaAcionada;
+        var implementada=!!registro.implementada;
+        if(!implementada)res='colapso';
+        var efeito=res==='vitoria'?10:res==='parcial'?5:-15;
+        // O custo de 20 já foi debitado no envio: não descontar novamente.
+        var saldoFinal=limitar(saldo+efeito,0,120);
+        st.orcamentosGrupos[g]=saldoFinal;st.penalidadesGrupos=st.penalidadesGrupos||{};st.penalidadesGrupos[g]=res==='colapso';
+        var total=CRITERIOS_GP5.reduce(function(s,c){return s+Number(av.notas[c.id].nota);},0);
+        st.pontuacoes[g]={total:total,resultadoOperacional:res,publicacaoId:rodada+':'+String(i+1),
+          implementada:implementada,reservaAcionada:reserva,custoOperacional:Number(registro.custo||0),
+          impactoOrcamento:efeito,orcamentoFinal:saldoFinal,custoConsultorias:consultasDaRodada*5,notas:av.notas,parecer:av.parecer};
+        av.publicado=true;av.resultadoFinal=res;av.publicadoEm=new Date().toISOString();
+        return st;
+      },{applyLocally:false});
+      if(!r.committed){cyberAlert('Resultado já publicado ou dados da rodada alterados.');return;}
+      cyberAlert('Resultado de '+g+' publicado com sucesso.');
+    }catch(e){console.error(e);cyberAlert('Falha na publicação. Confira conexão e permissões do Firebase.');}
+  }
+
   function renderRanking() {
     var tbody = document.getElementById('tbody-ranking');
     if (!tbody) return;
@@ -2824,6 +2976,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
         renderHistoricoTendencias();
         renderAuditoriaCyber();
         renderAvaliacaoFinalCyber();
+        if(document.activeElement && !document.activeElement.closest('#painel-avaliacao-hibrida'))renderAvaliacaoHibrida();
       } else if (active.id === 'screen-grupo') {
         if (grupoAtivo) {
           var headerNome = document.getElementById('grupo-header-nome');
@@ -2960,7 +3113,7 @@ function listen(role,idx){
   });
   cyberMergeState();
   // Pode chegar primeiro o resultado privado e depois o estado público: conciliar nos dois eventos.
-  if(role==='mestre')Object.entries(cyberPrivateState).forEach(([i,d])=>publicarResultadoPendente(Number(i),d));
+  // Resultados agora dependem de validação explícita da banca.
   // Não forçar a navegação em cada atualização remota.
   if(cyberRole==='equipe' && cyberTeamIndex>=0) grupoAtivo=(appState.grupos||[])[cyberTeamIndex]||'';
   restaurarTelaAutenticada(role,idx);
@@ -2969,11 +3122,12 @@ function listen(role,idx){
  indexes.forEach(i=>unsub.push(onValue(ref(db,CYBER_BASE+'/equipes/'+i),snap=>{
   cyberPrivateState[String(i)]=snap.val()||{};cyberMergeState();
   // Publicação automática pelo Mestre conectado; nunca dá escrita pública às equipes.
-  if(role==='mestre') publicarResultadoPendente(i,cyberPrivateState[String(i)]);
+  // Sem publicação automática de resultados enviados pela equipe.
  },err=>console.error('Acesso à equipe '+i,err))));
 }
 const resultadosEmPublicacao=new Set();
 async function publicarResultadoPendente(i,d){
+ return; // Desativado: publicação somente após validação explícita da banca.
  if(!d || !d.decisoes || !d.resultadoCalculado || !d.resultadoCalculado.pontuacao || !cyberPublicState)return;
  if(String(d._rodadaId||'')!==String(cyberPublicState.identificadorSorteioAtual||'') || cyberPublicState.rodadaSalva || cyberPublicState.competicaoEncerrada)return;
  const g=(cyberPublicState.grupos||[])[i-1];if(!g)return;
