@@ -1047,26 +1047,26 @@ body { overflow-x:hidden; }
 #cyber-password-field #cyber-dialog-input {margin-top:0; padding-right:62px;}
 #cyber-password-field #cyber-eye-button {
  position:absolute; right:7px; top:50%; transform:translateY(-50%) !important;
- width:44px; height:42px; min-width:0; margin:0; padding:0;
+ width:48px; height:42px; min-width:0; margin:0; padding:0; font-size:23px;
  display:flex; align-items:center; justify-content:center;
  border:1px solid #5e91ad; border-radius:7px;
  background:#17324d; color:#e9faff; cursor:pointer;
  box-shadow:none; z-index:2;
 }
-#cyber-password-field #cyber-eye-button[hidden] {display:none !important;}
+
 #cyber-password-field #cyber-eye-button:hover {background:#244f70;}
 #cyber-password-field #cyber-eye-button:focus-visible {outline:2px solid #35dfff;}
 </style>
 <div id="cyber-dialog-overlay" role="presentation"><div id="cyber-dialog-box" role="dialog" aria-modal="true" aria-labelledby="cyber-dialog-title"><div id="cyber-dialog-icon">🔐</div><h2 id="cyber-dialog-title">CYBER RH</h2><div id="cyber-dialog-msg"></div><form id="cyber-dialog-form"><div id="cyber-password-field">
 <input id="cyber-dialog-input" autocomplete="off"/>
-<button id="cyber-eye-button" type="button" aria-label="Mostrar senha" title="Mostrar senha" aria-pressed="false" hidden>
-<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+<button id="cyber-eye-button" type="button" aria-label="Mostrar senha" title="Mostrar senha" aria-pressed="false">
+👁
 </button></div><div id="cyber-dialog-actions"><button id="cyber-dialog-cancel" type="button" class="cyber-cancel">Cancelar</button><button id="cyber-dialog-ok" type="submit">Confirmar</button></div></form></div></div><div id="cyber-toast-stack" aria-live="polite"></div>
 <script>
 function cyberAlert(message){var stack=document.getElementById('cyber-toast-stack');if(!stack)return;var el=document.createElement('div');el.className='cyber-toast';el.textContent=String(message);stack.appendChild(el);setTimeout(function(){el.remove()},4200)}
 function cyberDialog(message,kind){return new Promise(function(resolve){var overlay=document.getElementById('cyber-dialog-overlay'),input=document.getElementById('cyber-dialog-input'),form=document.getElementById('cyber-dialog-form'),cancel=document.getElementById('cyber-dialog-cancel'),title=document.getElementById('cyber-dialog-title'),icon=document.getElementById('cyber-dialog-icon'),msg=document.getElementById('cyber-dialog-msg');title.textContent=kind==='password'?'ACESSO DO MESTRE':kind==='prompt'?'RECUPERAÇÃO DE PARTIDA':'CONFIRMAR AÇÃO';icon.textContent=kind==='password'?'🔐':kind==='prompt'?'💾':'⚡';msg.textContent=message;input.style.display=kind==='confirm'?'none':'block';input.type=kind==='password'?'password':'text';input.value='';
 var eye=document.getElementById('cyber-eye-button');
-eye.hidden=kind!=='password';
+eye.style.setProperty('display',kind==='password'?'flex':'none','important');
 eye.setAttribute('aria-pressed','false');
 eye.setAttribute('aria-label','Mostrar senha');
 eye.title='Mostrar senha';
