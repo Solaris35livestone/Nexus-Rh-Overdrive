@@ -816,7 +816,6 @@ body { overflow-x:hidden; }
 
     <div id="mestre-avaliacao" class="mestre-tab-content" style="display:none;">
       <div class="card"><h3 class="title">⚖️ Conselho de Gestão — Avaliação Híbrida</h3>
-      <p class="subtitle">Seis notas independentes (100 pontos). Anna Vivian e Carlos registram os pareceres operacionais. Marciele publica após a conferência. Use a mesma conta Mestre nos dispositivos da banca.</p>
       <div id="painel-avaliacao-hibrida"></div></div>
     </div>
     <!-- TAB 4: GERENCIAR COMUNICADOS -->
@@ -1043,10 +1042,43 @@ body { overflow-x:hidden; }
 #cyber-dialog-box{box-sizing:border-box;width:min(100%,440px);max-height:90dvh;overflow:auto;border:2px solid #34d9f5;border-radius:20px;padding:25px;background:linear-gradient(145deg,#1b2b4e,#0b142c 70%);box-shadow:0 0 24px #00d9ff45,0 20px 50px #0009;color:#f3f9ff;text-align:center;font-family:inherit}
 #cyber-dialog-icon{font-size:2.3rem;margin-bottom:10px}#cyber-dialog-title{font-size:1.28rem;font-weight:900;letter-spacing:.06em;color:#6deaff;margin:0 0 12px}#cyber-dialog-msg{white-space:pre-line;line-height:1.5;font-size:.94rem;color:#e5edff;overflow-wrap:anywhere}#cyber-dialog-input{display:none;box-sizing:border-box;width:100%;margin-top:16px;padding:13px;border:2px solid #43cfea;border-radius:10px;background:#0b1428!important;color:#fff!important;font:inherit;text-align:center;outline:none}#cyber-dialog-input:focus{box-shadow:0 0 0 3px #30d5ff35}#cyber-dialog-actions{display:flex;gap:10px;justify-content:center;margin-top:22px;flex-wrap:wrap}#cyber-dialog-actions button{cursor:pointer;min-width:120px;border:1px solid #4cdfff;border-radius:11px;padding:12px 18px;background:linear-gradient(135deg,#09c5e9,#3576f5);color:#fff;font:700 .92rem inherit;box-shadow:0 4px 12px #0006}#cyber-dialog-actions button.cyber-cancel{background:#243450;border-color:#65789b}#cyber-toast-stack{position:fixed;right:16px;bottom:16px;z-index:999998;display:flex;flex-direction:column;gap:8px;max-width:min(90vw,390px)}.cyber-toast{padding:13px 16px;border:1px solid #45d6ef;border-left:4px solid #4ce0ff;border-radius:11px;background:#14233e;color:#f3f9ff;box-shadow:0 8px 25px #0009;font:600 .9rem/1.4 inherit;animation:cyberToastIn .2s ease}@keyframes cyberToastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 </style>
-<div id="cyber-dialog-overlay" role="presentation"><div id="cyber-dialog-box" role="dialog" aria-modal="true" aria-labelledby="cyber-dialog-title"><div id="cyber-dialog-icon">🔐</div><h2 id="cyber-dialog-title">CYBER RH</h2><div id="cyber-dialog-msg"></div><form id="cyber-dialog-form"><input id="cyber-dialog-input" autocomplete="off"/><div id="cyber-dialog-actions"><button id="cyber-dialog-cancel" type="button" class="cyber-cancel">Cancelar</button><button id="cyber-dialog-ok" type="submit">Confirmar</button></div></form></div></div><div id="cyber-toast-stack" aria-live="polite"></div>
+<style>
+#cyber-password-field {position:relative; width:100%; margin-top:16px;}
+#cyber-password-field #cyber-dialog-input {margin-top:0; padding-right:62px;}
+#cyber-password-field #cyber-eye-button {
+ position:absolute; right:7px; top:50%; transform:translateY(-50%) !important;
+ width:44px; height:42px; min-width:0; margin:0; padding:0;
+ display:flex; align-items:center; justify-content:center;
+ border:1px solid #5e91ad; border-radius:7px;
+ background:#17324d; color:#e9faff; cursor:pointer;
+ box-shadow:none; z-index:2;
+}
+#cyber-password-field #cyber-eye-button[hidden] {display:none !important;}
+#cyber-password-field #cyber-eye-button:hover {background:#244f70;}
+#cyber-password-field #cyber-eye-button:focus-visible {outline:2px solid #35dfff;}
+</style>
+<div id="cyber-dialog-overlay" role="presentation"><div id="cyber-dialog-box" role="dialog" aria-modal="true" aria-labelledby="cyber-dialog-title"><div id="cyber-dialog-icon">🔐</div><h2 id="cyber-dialog-title">CYBER RH</h2><div id="cyber-dialog-msg"></div><form id="cyber-dialog-form"><div id="cyber-password-field">
+<input id="cyber-dialog-input" autocomplete="off"/>
+<button id="cyber-eye-button" type="button" aria-label="Mostrar senha" title="Mostrar senha" aria-pressed="false" hidden>
+<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+</button></div><div id="cyber-dialog-actions"><button id="cyber-dialog-cancel" type="button" class="cyber-cancel">Cancelar</button><button id="cyber-dialog-ok" type="submit">Confirmar</button></div></form></div></div><div id="cyber-toast-stack" aria-live="polite"></div>
 <script>
 function cyberAlert(message){var stack=document.getElementById('cyber-toast-stack');if(!stack)return;var el=document.createElement('div');el.className='cyber-toast';el.textContent=String(message);stack.appendChild(el);setTimeout(function(){el.remove()},4200)}
-function cyberDialog(message,kind){return new Promise(function(resolve){var overlay=document.getElementById('cyber-dialog-overlay'),input=document.getElementById('cyber-dialog-input'),form=document.getElementById('cyber-dialog-form'),cancel=document.getElementById('cyber-dialog-cancel'),title=document.getElementById('cyber-dialog-title'),icon=document.getElementById('cyber-dialog-icon'),msg=document.getElementById('cyber-dialog-msg');title.textContent=kind==='password'?'ACESSO DO MESTRE':kind==='prompt'?'RECUPERAÇÃO DE PARTIDA':'CONFIRMAR AÇÃO';icon.textContent=kind==='password'?'🔐':kind==='prompt'?'💾':'⚡';msg.textContent=message;input.style.display=kind==='confirm'?'none':'block';input.type=kind==='password'?'password':'text';input.value='';input.placeholder=kind==='password'?'Digite a senha do Mestre':'Digite sua escolha';overlay.classList.add('active');function done(v){overlay.classList.remove('active');form.removeEventListener('submit',submit);cancel.removeEventListener('click',dismiss);document.removeEventListener('keydown',key);resolve(v)}function submit(e){e.preventDefault();done(kind==='confirm'?true:input.value)}function dismiss(){done(kind==='confirm'?false:null)}function key(e){if(e.key==='Escape')dismiss()}form.addEventListener('submit',submit);cancel.addEventListener('click',dismiss);document.addEventListener('keydown',key);if(kind!=='confirm')setTimeout(function(){input.focus()},30)})}
+function cyberDialog(message,kind){return new Promise(function(resolve){var overlay=document.getElementById('cyber-dialog-overlay'),input=document.getElementById('cyber-dialog-input'),form=document.getElementById('cyber-dialog-form'),cancel=document.getElementById('cyber-dialog-cancel'),title=document.getElementById('cyber-dialog-title'),icon=document.getElementById('cyber-dialog-icon'),msg=document.getElementById('cyber-dialog-msg');title.textContent=kind==='password'?'ACESSO DO MESTRE':kind==='prompt'?'RECUPERAÇÃO DE PARTIDA':'CONFIRMAR AÇÃO';icon.textContent=kind==='password'?'🔐':kind==='prompt'?'💾':'⚡';msg.textContent=message;input.style.display=kind==='confirm'?'none':'block';input.type=kind==='password'?'password':'text';input.value='';
+var eye=document.getElementById('cyber-eye-button');
+eye.hidden=kind!=='password';
+eye.setAttribute('aria-pressed','false');
+eye.setAttribute('aria-label','Mostrar senha');
+eye.title='Mostrar senha';
+eye.onclick=function(){
+ var reveal=input.type==='password';
+ input.type=reveal?'text':'password';
+ eye.setAttribute('aria-pressed',String(reveal));
+ eye.setAttribute('aria-label',reveal?'Ocultar senha':'Mostrar senha');
+ eye.title=reveal?'Ocultar senha':'Mostrar senha';
+ input.focus();
+};
+input.placeholder=kind==='password'?'Digite a senha do Mestre':'Digite sua escolha';overlay.classList.add('active');function done(v){overlay.classList.remove('active');form.removeEventListener('submit',submit);cancel.removeEventListener('click',dismiss);document.removeEventListener('keydown',key);resolve(v)}function submit(e){e.preventDefault();done(kind==='confirm'?true:input.value)}function dismiss(){done(kind==='confirm'?false:null)}function key(e){if(e.key==='Escape')dismiss()}form.addEventListener('submit',submit);cancel.addEventListener('click',dismiss);document.addEventListener('keydown',key);if(kind!=='confirm')setTimeout(function(){input.focus()},30)})}
 function cyberConfirm(message){return cyberDialog(message,'confirm')}
 function cyberPrompt(message){return cyberDialog(message,'prompt')}
 </script>
@@ -2807,13 +2839,13 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     if(Object.values(gp5Dirty).some(Boolean))return;
     var html='<div class="card" style="margin:12px 0"><label for="gp5-editor">Quem está avaliando neste dispositivo?</label><select id="gp5-editor" onchange="gp5SelecionarAvaliador(this.value)"><option value="">Selecione o avaliador</option>';
     CRITERIOS_GP5.forEach(function(c){html+='<option value="'+c.id+'" '+(gp5EditorId===c.id?'selected':'')+'>'+escaparHTML(c.nome)+' — '+escaparHTML(c.rotulo)+'</option>';});
-    html+='</select><p class="subtitle">Cada avaliador edita somente seu próprio critério. A identificação local não é uma proteção de acesso; para isso são necessárias regras de autenticação no Firebase.</p></div>';
+    html+='</select></div>';
     (appState.grupos||[]).forEach(function(g,i){
       var d=decisaoPrivadaGP5(g),a=avaliacaoGP5(g),pub=(appState.pontuacoes||{})[g];
       var carta=gp5Carta(g),titulo=((appState.crises||{})[g]||{}).titulo||'Carta não sorteada';
       var feitas=CRITERIOS_GP5.filter(function(c){var reg=(a.notas||{})[c.id];return reg&&reg.nota!==null&&reg.nota!==undefined&&Number.isFinite(Number(reg.nota));});
       html+='<section class="decisao-monitor-card" style="margin:12px 0"><h4 style="color:var(--cyan)">'+escaparHTML(g)+'</h4><p>'+escaparHTML(titulo)+'</p>';
-      html+='<p class="subtitle">Avaliações concluídas: <strong>'+feitas.length+'/6</strong> • '+CRITERIOS_GP5.map(function(c){return (feitas.some(function(f){return f.id===c.id;})?'✓ ':'○ ')+escaparHTML(c.nome);}).join(' · ')+'</p>';
+      html+='<p class="subtitle">Avaliações concluídas: <strong>'+feitas.length+'/6</strong></p>';
       if(pub&&pub.publicacaoId){html+='<p class="badge badge-success">Publicado • '+Number(pub.total||0)+'/100 • '+escaparHTML(pub.resultadoOperacional||'')+'</p></section>';return;}
       if(carta){
         html+='<details style="margin:10px 0"><summary style="cursor:pointer;color:var(--cyan);font-weight:700">Consultar carta completa e alternativas</summary><div style="padding:12px;background:#0a1730;border-radius:8px">';
