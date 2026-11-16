@@ -2203,43 +2203,38 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var decJust = document.getElementById('decisao-justificativa-pitch');
     var pitchText = decJust ? decJust.value.trim() : '';
 
-    // Debitar o custo operacional no envio, de forma atômica e uma única vez por rodada.
-    // O resultado da avaliação permanece pendente até a publicação do Mestre.
-    var rodadaEnvio = String(appState.identificadorSorteioAtual || '');
-    if(!sincronizacaoPronta || !window.rtdbRunTransaction){cyberAlert('Aguarde a sincronização com o Firebase.');return;}
-    try {
-      var debito = await window.rtdbRunTransaction(window.rtdbRef(window.db,CYBER_BASE+'/publico'),function(st){
-        if(!st || String(st.identificadorSorteioAtual||'')!==rodadaEnvio || st.rodadaSalva || st.competicaoEncerrada)return;
-        st.custosOperacionaisRodada=st.custosOperacionaisRodada||{};
-        if(st.custosOperacionaisRodada[g] && st.custosOperacionaisRodada[g].rodadaId===rodadaEnvio)return st;
-        st.orcamentosGrupos=st.orcamentosGrupos||{};
-        st.reservaRHUtilizada=st.reservaRHUtilizada||{};
-        var saldo=limitar(st.orcamentosGrupos[g]==null?100:st.orcamentosGrupos[g],0,120);
-        var reserva=false;
-        if(saldo<20 && !st.reservaRHUtilizada[g]){
-          saldo=limitar(saldo+20,0,120);reserva=true;st.reservaRHUtilizada[g]=true;
-        }
-        var implementada=saldo>=20;
-        if(implementada)saldo=limitar(saldo-20,0,120);
-        st.orcamentosGrupos[g]=saldo;
-        st.custosOperacionaisRodada[g]={rodadaId:rodadaEnvio,custo:implementada?20:0,implementada:implementada,reservaAcionada:reserva};
-        return st;
+    // Equipes só gravam no próprio nó privado; nunca alteram /publico.
+    var rodadaEnvio=String(appState.identificadorSorteioAtual||'');
+    if(!sincronizacaoPronta||!window.rtdbRunTransaction||cyberRole!=='equipe'||cyberTeamIndex<0){
+      cyberAlert('Aguarde a autenticação e a sincronização.');return;
+    }
+    var i=String(cyberTeamIndex+1);
+    var decisao={q1Texto:opt1.texto,q2Texto:opt2.texto,pitchText:pitchText,resultado:'pendente',statusAvaliacao:'aguardando',rodadaId:rodadaEnvio};
+    var hist={cartaTitulo:c.titulo,q1Texto:opt1.texto,q2Texto:opt2.texto,pitchText:pitchText,resultado:'pendente',rodadaId:rodadaEnvio};
+    try{
+      var r=await window.rtdbRunTransaction(window.rtdbRef(window.db,CYBER_BASE+'/equipes/'+i),function(old){
+        old=old||{};
+        if(old._rodadaId===rodadaEnvio&&old.decisoes)return;
+        var novo=Object.assign({},old,{_rodadaId:rodadaEnvio,_teamIndex:Number(i),decisoes:decisao});
+        var h=Array.isArray(old.historicoDecisoesGrupos)?old.historicoDecisoesGrupos.slice():[];
+        if(!h.some(function(x){return String(x.rodadaId||'')===rodadaEnvio;}))h.push(hist);
+        novo.historicoDecisoesGrupos=h;
+        return novo;
       },{applyLocally:false});
-      if(!debito.committed){cyberAlert('Não foi possível confirmar o custo operacional. Verifique a rodada.');return;}
-    } catch(e){console.error(e);cyberAlert('Falha ao atualizar o orçamento no Firebase. Tente novamente.');return;}
-
-    if (!appState.decisoes) appState.decisoes = {};
-    appState.decisoes[g] = {
-      q1Texto:opt1.texto, q2Texto:opt2.texto, pitchText:pitchText,
-      resultado:'pendente', statusAvaliacao:'aguardando', rodadaId:rodadaEnvio
-    };
-    if (!appState.historicoDecisoesGrupos) appState.historicoDecisoesGrupos = {};
-    if (!appState.historicoDecisoesGrupos[g]) appState.historicoDecisoesGrupos[g] = [];
-    appState.historicoDecisoesGrupos[g].push({cartaTitulo:c.titulo,q1Texto:opt1.texto,q2Texto:opt2.texto,pitchText:pitchText,resultado:'pendente',rodadaId:rodadaEnvio});
-    guardarEstado();
-    verificarEncerramentoDeliberacao();
-    atualizarInterface();
-    cyberAlert('Decisão registrada! Custo operacional atualizado no orçamento. Aguardando avaliação do Conselho de Gestão.');
+      if(!r.committed){cyberAlert('Decisão desta rodada já enviada.');return;}
+      if(!appState.decisoes)appState.decisoes={};
+      appState.decisoes[g]=decisao;
+      if(!appState.historicoDecisoesGrupos)appState.historicoDecisoesGrupos={};
+      if(!appState.historicoDecisoesGrupos[g])appState.historicoDecisoesGrupos[g]=[];
+      if(!appState.historicoDecisoesGrupos[g].some(function(x){return String(x.rodadaId||'')===rodadaEnvio;}))appState.historicoDecisoesGrupos[g].push(hist);
+      cyberPrivateState[i]=r.snapshot.val()||{};
+      verificarEncerramentoDeliberacao();
+      atualizarInterface();
+      cyberAlert('Decisão salva no Firebase! O Mestre aplicará o custo operacional.');
+    }catch(e){
+      console.error('Erro ao salvar decisão',e);
+      cyberAlert('Falha ao salvar decisão: '+(e.code||e.message||'erro desconhecido')+'. Confira as regras da equipe no Firebase.');
+    }
   }
 
   // Guia pedagogico revelado apenas apos a submissao da carta.
@@ -3149,13 +3144,41 @@ function listen(role,idx){
   // Não forçar a navegação em cada atualização remota.
   if(cyberRole==='equipe' && cyberTeamIndex>=0) grupoAtivo=(appState.grupos||[])[cyberTeamIndex]||'';
   restaurarTelaAutenticada(role,idx);
+  if(role==='mestre')Object.entries(cyberPrivateState).forEach(([i,d])=>aplicarCustoDecisaoMestre(Number(i),d));
  },err=>{console.error(err);cyberAlert('Leitura pública negada no Firebase. Verifique as regras.')}));
  const indexes=role==='mestre'?[1,2,3,4,5,6]:[idx+1];
  indexes.forEach(i=>unsub.push(onValue(ref(db,CYBER_BASE+'/equipes/'+i),snap=>{
   cyberPrivateState[String(i)]=snap.val()||{};cyberMergeState();
+  if(role==='mestre')aplicarCustoDecisaoMestre(i,cyberPrivateState[String(i)]);
   // Publicação automática pelo Mestre conectado; nunca dá escrita pública às equipes.
   // Sem publicação automática de resultados enviados pela equipe.
  },err=>console.error('Acesso à equipe '+i,err))));
+}
+const custosEmProcessamento=new Set();
+async function aplicarCustoDecisaoMestre(i,d){
+ if(cyberRole!=='mestre'||!d||!d.decisoes||!cyberPublicState)return;
+ const g=(cyberPublicState.grupos||[])[i-1], rodada=String(cyberPublicState.identificadorSorteioAtual||'');
+ if(!g||!rodada||String(d._rodadaId||'')!==rodada||cyberPublicState.rodadaSalva||cyberPublicState.competicaoEncerrada)return;
+ const chave=i+':'+rodada;
+ if(custosEmProcessamento.has(chave)||(cyberPublicState.custosOperacionaisRodada||{})[g]?.rodadaId===rodada)return;
+ custosEmProcessamento.add(chave);
+ try{
+   await runTransaction(ref(db,CYBER_BASE+'/publico'),st=>{
+     if(!st||String(st.identificadorSorteioAtual||'')!==rodada||st.rodadaSalva||st.competicaoEncerrada)return;
+     st.custosOperacionaisRodada=st.custosOperacionaisRodada||{};
+     if(st.custosOperacionaisRodada[g]?.rodadaId===rodada)return;
+     st.orcamentosGrupos=st.orcamentosGrupos||{};
+     st.reservaRHUtilizada=st.reservaRHUtilizada||{};
+     let saldo=Math.max(0,Math.min(120,Number(st.orcamentosGrupos[g]??100))),reserva=false;
+     if(saldo<20&&!st.reservaRHUtilizada[g]){saldo=Math.min(120,saldo+20);reserva=true;st.reservaRHUtilizada[g]=true;}
+     const implementada=saldo>=20;
+     if(implementada)saldo-=20;
+     st.orcamentosGrupos[g]=saldo;
+     st.custosOperacionaisRodada[g]={rodadaId:rodada,custo:implementada?20:0,implementada,reservaAcionada:reserva};
+     return st;
+   },{applyLocally:false});
+ }catch(e){console.error('Erro ao aplicar custo no Mestre',i,e);}
+ finally{custosEmProcessamento.delete(chave);}
 }
 const resultadosEmPublicacao=new Set();
 async function publicarResultadoPendente(i,d){
