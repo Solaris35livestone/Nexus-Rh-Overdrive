@@ -1682,6 +1682,11 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       appState.cartasSorteadasPorGrupo = {};
       appState.crises = {};
       appState.identificadorSorteioAtual = null;
+      // Ao limpar todos os sorteios, reinicia também a deliberação compartilhada.
+      // O próximo sorteio iniciará um novo período completo de 15 minutos.
+      appState.cronometroCompeticao = {etapa:'deliberacao',restante:900,status:'aguardando',terminaEm:0,sorteioId:'',alertas:{}};
+      appState.tempoEsgotadoGlobal = false;
+      ultimoAlertaTempo = '';
       appState.decisoes = {};
       appState.consultas = {};
     appState.travasConsultorias = {};
@@ -1694,8 +1699,9 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       appState.rodadaSalva = false;
         rascunhoEquipes = (appState.grupos || []).slice();
       guardarEstado();
+      atualizarTimerCompartilhado();
       renderSorteioMestre();
-      avisoTemporario("Histórico de cartas limpo e orçamentos restaurados para 100 pontos!");
+      avisoTemporario("Histórico de cartas limpo, orçamentos restaurados e deliberação reiniciada em 15 minutos!");
     }
   }
 
@@ -1932,20 +1938,21 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
   function dadosRelatorioCyber(){
     return (appState.historicoRodadas||[]).flatMap(h=>(appState.grupos||[]).map(g=>{
       var d=(h.decisoesRodada||{})[g]||{},p=(h.placar||{})[g]||{};
-      return {rodada:h.rodada,equipe:g,carta:(h.cartasRodada||{})[g]||'',decisao1:d.q1Texto||'',decisao2:d.q2Texto||'',justificativa:d.pitchText||'',resultado:d.resultado||'',fundamentacao:p.fund??'',viabilidade:p.viab??'',recursos:p.saldo??'',pontos:p.total??'',orcamento:d.orcamentoFinal??p.orcamentoFinal??''};
+      return {rodada:h.rodada,equipe:g,carta:(h.cartasRodada||{})[g]||'',decisao1:d.q1Texto||'',decisao2:d.q2Texto||'',justificativa:d.pitchText||'',resultado:d.resultado||'',fundamentacao:p.fund??'',viabilidade:p.viab??'',recursos:p.saldo??'',pontos:p.total??'',orcamento:d.orcamentoFinal??p.orcamentoFinal??'',parecerIA:p.parecerIA||null,parecerBanca:p.parecer||''};
     }));
   }
   function baixarCyber(nome,conteudo,tipo){var blob=new Blob([conteudo],{type:tipo});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
   function exportarRelatorioCyber(){
     if(cyberRole!=='mestre')return;
-    var linhas=dadosRelatorioCyber(),campos=['rodada','equipe','carta','decisao1','decisao2','justificativa','resultado','fundamentacao','viabilidade','recursos','pontos','orcamento'];
+    var linhas=dadosRelatorioCyber(),campos=['rodada','equipe','carta','decisao1','decisao2','justificativa','resultado','fundamentacao','viabilidade','recursos','pontos','orcamento','parecerIA_nota','parecerIA_resultado','parecerIA_fundamentacao','parecerIA_alertas','parecerBanca'];
+    linhas=linhas.map(l=>({...l,parecerIA_nota:l.parecerIA?.nota??'',parecerIA_resultado:l.parecerIA?.resultado??'',parecerIA_fundamentacao:l.parecerIA?.justificativa??'',parecerIA_alertas:l.parecerIA?.alertas??''}));
     var csv='\uFEFF'+[campos.join(';')].concat(linhas.map(l=>campos.map(k=>'"'+String(l[k]??'').replace(/"/g,'""')+'"').join(';'))).join('\r\n');
     baixarCyber('CYBER_RH_relatorio_rodadas.csv',csv,'text/csv;charset=utf-8');
   }
   function exportarRelatorioHTML(){
     if(cyberRole!=='mestre')return;
     var linhas=dadosRelatorioCyber(),html='<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Relatório CYBER RH</title><style>body{font:15px Arial;max-width:1000px;margin:30px auto;color:#152036}article{padding:15px;border:1px solid #ccc;margin:12px 0;break-inside:avoid}h1{color:#174c83}p{white-space:pre-wrap}</style><h1>CYBER RH — Relatório final</h1>';
-    linhas.forEach(l=>{html+='<article><h2>Rodada '+Number(l.rodada)+' — '+escaparHTML(l.equipe)+'</h2><p><b>Carta:</b> '+escaparHTML(l.carta)+'</p><p><b>Decisão 1:</b> '+escaparHTML(l.decisao1)+'</p><p><b>Decisão 2:</b> '+escaparHTML(l.decisao2)+'</p><p><b>Justificativa:</b> '+escaparHTML(l.justificativa)+'</p><p><b>Resultado:</b> '+escaparHTML(l.resultado)+' | <b>Pontos:</b> '+escaparHTML(l.pontos)+' | <b>Orçamento:</b> '+escaparHTML(l.orcamento)+'</p></article>';});
+    linhas.forEach(l=>{html+='<article><h2>Rodada '+Number(l.rodada)+' — '+escaparHTML(l.equipe)+'</h2><p><b>Carta:</b> '+escaparHTML(l.carta)+'</p><p><b>Decisão 1:</b> '+escaparHTML(l.decisao1)+'</p><p><b>Decisão 2:</b> '+escaparHTML(l.decisao2)+'</p><p><b>Justificativa:</b> '+escaparHTML(l.justificativa)+'</p><p><b>Resultado:</b> '+escaparHTML(l.resultado)+' | <b>Pontos:</b> '+escaparHTML(l.pontos)+' | <b>Orçamento:</b> '+escaparHTML(l.orcamento)+'</p><h3>Parecer automático integrado</h3>'+(l.parecerIA?'<p><b>Pontuação do parecer:</b> '+escaparHTML(l.parecerIA.nota)+'/100 | <b>Classificação do parecer:</b> '+escaparHTML(l.parecerIA.resultado||'')+'</p><p><b>Fundamentação:</b> '+escaparHTML(l.parecerIA.justificativa||'')+'</p><p><b>Alertas:</b> '+escaparHTML(l.parecerIA.alertas||'Nenhum')+'</p>':'<p>Não foi gerado parecer automático nesta rodada.</p>')+(l.parecerBanca?'<h3>Parecer da banca</h3><p>'+escaparHTML(l.parecerBanca)+'</p>':'')+'</article>';});
     baixarCyber('CYBER_RH_relatorio_impressao.html',html+'</html>','text/html;charset=utf-8');
   }
   function renderAvaliacaoFinalCyber(){
@@ -2828,6 +2835,32 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     var crise=(appState.crises||{})[g]||{};
     return CARTAS_CRISE.find(function(c){return c.id===crise.id||c.titulo===crise.titulo;})||null;
   }
+  // Gemini: parecer consultivo; a publicação continua exclusivamente manual.
+  var CYBER_GEMINI_WORKER='https://cyber-rh-overdriver.solaris35livestone-d6f.workers.dev/';
+  var gp5ParecerIA={};
+  async function solicitarParecerIAGP5(i){
+    if(cyberRole!=='mestre'||!sincronizacaoPronta){cyberAlert('Entre como Mestre e aguarde a sincronização.');return;}
+    var g=(appState.grupos||[])[i], d=decisaoPrivadaGP5(g), c=gp5Carta(g);
+    if(!g||!d||!c){cyberAlert('Aguarde a resposta da equipe e o sorteio da carta.');return;}
+    if((appState.pontuacoes||{})[g]?.publicacaoId){cyberAlert('Esta avaliação já foi publicada.');return;}
+    if(typeof window.cyberGetMestreToken!=='function'){cyberAlert('Autenticação ainda não disponível.');return;}
+    var btn=document.getElementById('gp5-ia-btn-'+i);
+    if(btn){btn.disabled=true;btn.textContent='Gemini avaliando...';}
+    try{
+      var token=await window.cyberGetMestreToken();
+      var payload={equipe:g,rodadaId:String(appState.identificadorSorteioAtual||''),
+        decisoes:{imediata:d.q1Texto||'',estrutural:d.q2Texto||'',justificativa:d.pitchText||''},
+        carta:{titulo:c.titulo,cenario:[c.desc,c.ameaca,c.setor,c.q1,c.q2].filter(Boolean).join(' | '),opcoes:[...(c.opts1||[]),...(c.opts2||[])].map(o=>o.texto)}};
+      var r=await fetch(CYBER_GEMINI_WORKER,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(payload)});
+      var json=await r.json().catch(()=>({}));
+      if(!r.ok)throw Error((json.erro||'Falha na avaliação')+(json.codigo?' (Gemini '+json.codigo+')':''));
+      if(!Number.isInteger(json.nota)||json.nota<0||json.nota>100||!['vitoria','parcial','colapso'].includes(json.resultado))throw Error('Parecer da IA inválido');
+      gp5ParecerIA[g]={...json,rodadaId:String(appState.identificadorSorteioAtual||''),recebidoEm:new Date().toLocaleString('pt-BR')};
+      renderAvaliacaoHibrida();
+      cyberAlert('Parecer do Gemini recebido. A banca deve registrar as seis notas e validar a operação.');
+    }catch(e){console.error('Gemini:',e);cyberAlert('Gemini: '+e.message+' — avaliação manual permanece disponível.');}
+    finally{if(btn){btn.disabled=false;btn.textContent='Gerar parecer';}}
+  }
   function renderAvaliacaoHibrida(){
     var el=document.getElementById('painel-avaliacao-hibrida');if(!el||cyberRole!=='mestre')return;
     // Não recriar inputs com edição pendente, mesmo quando o Firebase atualizar.
@@ -2850,11 +2883,19 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
       }
       if(!d){html+='<p class="subtitle">Aguardando resposta privada sincronizada.</p></section>';return;}
       html+='<div style="margin:12px 0;padding:13px;border:1px solid #35dfff;border-radius:10px;background:#0a1730"><strong style="color:#35dfff">RESPOSTA ENVIADA PELA EQUIPE</strong><p style="margin-top:9px"><b>Decisão imediata:</b> '+escaparHTML(d.q1Texto||'Não informada')+'</p><p style="margin-top:9px"><b>Decisão estrutural:</b> '+escaparHTML(d.q2Texto||'Não informada')+'</p>'+(d.pitchText?'<p style="margin-top:9px"><b>Explicação:</b> '+escaparHTML(d.pitchText)+'</p>':'')+'</div>';
+      html+='<div class="btn-group"><button class="btn btn-sec" id="gp5-ia-btn-'+i+'" onclick="solicitarParecerIAGP5('+i+')">Gerar parecer</button></div>';
+      var parecerIA=gp5ParecerIA[g];
+      if(parecerIA&&parecerIA.rodadaId===String(appState.identificadorSorteioAtual||'')){
+        html+='<div style="margin:12px 0;padding:13px;border:1px solid #a477ff;border-radius:10px;background:#17102e"><strong style="color:#d5b4ff">GEMINI — PARECER CONSULTIVO (NÃO PUBLICADO)</strong>'+
+          '<p><b>Pontuação do parecer:</b> '+parecerIA.nota+'/100</p><p><b>Classificação do parecer:</b> '+escaparHTML(parecerIA.resultado)+'</p>'+
+          '<p><b>Fundamentação:</b> '+escaparHTML(parecerIA.justificativa||'')+'</p><p><b>Alertas:</b> '+escaparHTML(parecerIA.alertas||'Nenhum informado')+'</p>'+
+          '<p class="subtitle">A IA não altera notas, verificações, orçamento ou placar. Os seis avaliadores devem registrar suas notas; Marciele valida a publicação.</p></div>';
+      }
       var editor=CRITERIOS_GP5.find(function(c){return c.id===gp5EditorId;});
       if(editor){
         var reg=(a.notas||{})[editor.id]||{};
         html+='<div class="form-group"><label>'+escaparHTML(editor.nome)+' — '+escaparHTML(editor.rotulo)+' (0–'+editor.max+')</label><input type="number" min="0" max="'+editor.max+'" step="1" id="gp5-nota-'+i+'-'+editor.id+'" oninput="gp5MarcarAlterado('+i+')" value="'+(reg.nota==null?'':Number(reg.nota))+'" style="max-width:110px"></div>';
-      }else{html+='<p class="subtitle">Selecione seu nome para registrar a nota.</p>';}
+      }else{}
       if(gp5EditorId==='anna'||gp5EditorId==='carlos'){
         html+='<h4>Conferência operacional</h4>';
         VERIFICACOES_GP5.forEach(function(nome,j){html+='<div class="form-group"><label>'+escaparHTML(nome)+'</label><select id="gp5-check-'+i+'-'+j+'" onchange="gp5MarcarAlterado('+i+')"><option value="">Selecione...</option>'+[['sim','Atende'],['parcial','Atende parcialmente'],['nao','Não atende']].map(function(op){return '<option value="'+op[0]+'" '+((a.verificacoes||{})[j]===op[0]?'selected':'')+'>'+op[1]+'</option>';}).join('')+'</select></div>';});
@@ -2936,6 +2977,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
     if(!await cyberConfirm('Marciele confirma a publicação de '+g+'? Nota técnica e consequência operacional serão definitivas nesta rodada.'))return;
     var rodada=String(appState.identificadorSorteioAtual||'');
     var consultasDaRodada=((cyberPrivateState[String(i+1)]||{}).consultas||[]).length;
+    var parecerGerado=gp5ParecerIA[g]&&gp5ParecerIA[g].rodadaId===rodada?{nota:gp5ParecerIA[g].nota,resultado:gp5ParecerIA[g].resultado,justificativa:gp5ParecerIA[g].justificativa,alertas:gp5ParecerIA[g].alertas,recebidoEm:gp5ParecerIA[g].recebidoEm}:null;
     try{
       var r=await window.rtdbRunTransaction(window.rtdbRef(window.db,CYBER_BASE+'/publico'),function(st){
         if(!st||String(st.identificadorSorteioAtual||'')!==rodada||st.rodadaSalva||st.competicaoEncerrada)return;
@@ -2957,7 +2999,7 @@ function cyberPrompt(message){return cyberDialog(message,'prompt')}
         var total=CRITERIOS_GP5.reduce(function(s,c){return s+Number(av.notas[c.id].nota);},0);
         st.pontuacoes[g]={total:total,resultadoOperacional:res,publicacaoId:rodada+':'+String(i+1),
           implementada:implementada,reservaAcionada:reserva,custoOperacional:Number(registro.custo||0),
-          impactoOrcamento:efeito,orcamentoFinal:saldoFinal,custoConsultorias:consultasDaRodada*5,notas:av.notas,parecer:av.parecer};
+          impactoOrcamento:efeito,orcamentoFinal:saldoFinal,custoConsultorias:consultasDaRodada*5,notas:av.notas,parecer:av.parecer,parecerIA:parecerGerado};
         av.publicado=true;av.resultadoFinal=res;av.publicadoEm=new Date().toISOString();
         return st;
       },{applyLocally:false});
@@ -3201,6 +3243,7 @@ async function publicarResultadoPendente(i,d){
  try{await update(ref(db,CYBER_BASE+'/publico'),alteracoes)}catch(e){console.error('Erro ao publicar pontuação',e)}
  finally{resultadosEmPublicacao.delete(chave)}
 }
+window.cyberGetMestreToken=async function(){if(!auth.currentUser||auth.currentUser.uid!==mestre)throw Error('Apenas o Mestre pode solicitar avaliação');return auth.currentUser.getIdToken();};
 window.cyberAuthLogin=async function(role,idx,password){
  const email=role==='mestre'?'mestre@cyberrh.example':'equipe'+(idx+1)+'@cyberrh.example';
  await setPersistence(auth,browserSessionPersistence);
