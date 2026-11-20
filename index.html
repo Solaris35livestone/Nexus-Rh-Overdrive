@@ -1,0 +1,1188 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no"><title>NEXUS RH: OVERDRIVE — Multiplayer Firebase 5</title>
+<style>
+:root{--ink:#f5fbff;--night:#122538;--glass:rgba(18,37,56,.78);--line:rgba(255,255,255,.24);--accent:#ffda79}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;font:500 14px system-ui,-apple-system,Arial,sans-serif;color:var(--ink);background:#a8d3ee}button{font:700 13px system-ui;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+#world{position:fixed;inset:0;touch-action:none}#world canvas{display:block;width:100%;height:100%}
+#header{position:fixed;inset:max(9px,env(safe-area-inset-top)) 12px auto;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;pointer-events:none;z-index:4}
+#location{min-width:0;padding:9px 12px;background:var(--glass);border:1px solid var(--line);border-radius:12px;box-shadow:0 5px 15px #182b4938;max-width:48vw;backdrop-filter:blur(5px)}#brand{font-weight:850;font-size:12px;letter-spacing:.06em}#where{font-size:12px;color:#e0eaf3;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#topActions{display:flex;gap:7px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end}#topActions button{background:var(--glass);color:#fff;border:1px solid var(--line);padding:10px 12px;border-radius:11px;backdrop-filter:blur(5px)}#topActions button.primary{background:#f6d76a;color:#192e3c;border-color:#ffeeb4}
+#waypoint{position:fixed;top:75px;right:12px;z-index:3;background:var(--glass);border:1px solid var(--line);padding:7px 11px;border-radius:10px;font-size:12px;max-width:min(56vw,230px);display:none;text-align:right;pointer-events:none;backdrop-filter:blur(4px)}#waypoint.on{display:block}#bearing{font-size:18px;font-weight:900;color:#ffdb75;margin-right:5px}
+#toast{position:fixed;bottom:105px;left:50%;transform:translateX(-50%);z-index:4;padding:9px 13px;border-radius:10px;background:#163047d9;border:1px solid #ffffff48;color:white;text-align:center;white-space:normal;max-width:85vw;min-width:170px;pointer-events:none;font-size:12px;transition:opacity .3s}
+#help{position:fixed;left:50%;bottom:15px;transform:translateX(-50%);background:#172b3ac9;border:1px solid #ffffff35;border-radius:9px;padding:8px 12px;font-size:12px;color:#e6f1f7;pointer-events:none;white-space:nowrap;z-index:3}
+#controls{position:fixed;inset:auto 0 max(18px,env(safe-area-inset-bottom)) 0;z-index:4;display:none;pointer-events:none}
+#joy{position:absolute;bottom:0;left:18px;width:116px;height:116px;border:1.5px solid #ffffff80;border-radius:50%;background:#2034496e;touch-action:none;pointer-events:auto;backdrop-filter:blur(2px)}#joy:before{content:'+';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:25px;color:#e7f2fc55}#knob{position:absolute;width:49px;height:49px;border-radius:50%;background:#dcecf5bd;left:33px;top:33px;box-shadow:0 3px 9px #05111b55;pointer-events:none}
+#gameActions{position:absolute;bottom:2px;right:16px;display:grid;grid-template-columns:repeat(2,63px);grid-template-rows:repeat(2,57px);gap:9px;pointer-events:auto}#gameActions button{border-radius:16px;color:#fff;background:#21374cbb;border:1px solid #ffffff80;backdrop-filter:blur(4px)}#gameActions #act{grid-column:2;grid-row:1;background:#e8cd80;color:#1d2b37;border-color:#ffeeae}#gameActions #jump{grid-column:1;grid-row:1}#gameActions #sprint{grid-column:1 / 3;grid-row:2;border-radius:11px}#gameActions #sprint.active{background:#bfe4a0;color:#203620}
+#mapModal,#terminal{position:fixed;inset:0;display:none;z-index:20;background:#081522eb}#mapModal.show{display:flex;align-items:center;justify-content:center;padding:15px}#mapShell{width:min(670px,100%);max-height:100%;overflow:auto;background:#f5f2e9;color:#233842;border-radius:20px;box-shadow:0 18px 80px #0008;padding:18px}#mapShell h2{font-size:19px;margin:0}#mapShell p{font-size:12px;color:#52656e;margin:7px 0 12px}.modalTop{display:flex;justify-content:space-between;align-items:center;gap:10px}.closeBtn{background:#213a48;color:#fff;border:0;border-radius:9px;padding:10px 13px}
+#mapCanvas{display:block;width:100%;height:auto;aspect-ratio: 1.55;max-height:52vh;border-radius:13px;background:#9fc288;touch-action:manipulation;cursor:crosshair}
+#mapList{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:12px}#mapList button{padding:9px 4px;background:white;color:#203340;border:1px solid #ccd6d3;border-radius:9px;min-height:45px;font-size:11px}#mapList button.sel{outline:3px solid #e7b83e}#mapInfo{margin-top:10px;font-size:12px;color:#46585d}
+#terminal.show{display:flex;flex-direction:column;background:#071124}#termHead{background:#0c1c30;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid #64798b;flex:none}#termHead b{font-size:12px;letter-spacing:.04em}#terminal iframe{width:100%;flex:1;min-height:0;border:0;background:#060918}
+#menuModal{position:fixed;inset:0;background:#091a2fdb;display:none;align-items:center;justify-content:center;padding:18px;z-index:12}#menuModal.show{display:flex}#menuCard{width:min(360px,100%);background:#f4f2e9;color:#283f4d;border-radius:15px;padding:17px}#menuCard h2{margin:0 0 7px;font-size:18px}#menuCard p{font-size:13px;line-height:1.5}#menuCard button{width:100%;padding:11px;margin-top:7px;border-radius:10px;border:1px solid #cad2d4;background:white;color:#253847}
+#fallback{position:fixed;inset:0;display:none;z-index:10;background:#dbe9f2;color:#1c3243;text-align:center;padding:20vh 15px}
+@media(pointer:coarse){#controls{display:block}#help{display:none}#toast{bottom:149px}#location{max-width:43vw}#brand{font-size:10px}#where{font-size:11px}#topActions button{font-size:11px;padding:9px}#waypoint{top:68px}}
+@media(max-height:520px){#joy{height:95px;width:95px;left:11px}#knob{left:24px;top:24px}#gameActions{grid-template-columns:repeat(2,51px);grid-template-rows:repeat(2,45px);gap:5px;right:9px}#gameActions button{font-size:11px}#toast{bottom:100px}#waypoint{top:61px}#mapCanvas{max-height:39vh}}
+@media(max-width:420px){#topActions{gap:4px}#topActions button{padding:9px 7px}#mapList{grid-template-columns:repeat(2,minmax(0,1fr))}#mapShell{padding:12px}}
+
+
+
+/* Cooperative gameplay: opaque dialogs, compact persistent status, clear typography */
+#gameActions button,#joy{touch-action:none;-webkit-user-select:none;user-select:none}
+#liveOverlay,.liveOverlay{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:#092034e8;padding:14px;overflow-y:auto}
+#liveOverlay:not(.liveShow),.liveOverlay[hidden]{display:none!important}
+.liveCard{width:min(460px,100%);max-height:calc(100dvh - 28px);overflow:auto;border:1px solid #668193;border-radius:17px;padding:20px;background:#19374b;color:#f4f8fc;box-shadow:0 20px 80px #07111bb9}
+.liveCard.wide{width:min(810px,100%);padding:15px 20px}.liveBrand{font-weight:900;font-size:15px;color:#f9da8b;letter-spacing:.04em}
+.liveBrand small{font-size:11px;display:block;color:#bbd4df;font-weight:600;letter-spacing:.02em;margin-top:5px}
+.liveCard h2{font-size:21px;margin:12px 0}.liveCard h3{font-size:16px;color:#e9ce87;margin:13px 0 8px}.liveCard p{font-size:13px;line-height:1.55}
+.liveCard label{font-size:12px;display:block;margin:11px 0 6px;color:#deebf1;font-weight:700}
+.liveCard input,.liveCard select,.liveCard textarea,.liveCard button{width:100%;min-height:41px;margin:5px 0;border:1px solid #8196a5;border-radius:9px;padding:9px 10px;font-size:13px;font-family:inherit}
+.liveCard input,.liveCard select,.liveCard textarea{color:#152f43;background:#f8fbfe}.liveCard textarea{min-height:66px;resize:vertical}
+.liveCard button{color:#e8f3fa;background:#315166;font-weight:800}.liveCard button.liveAccent{background:#f6d578;color:#243d48;border-color:#ffe5a1}.liveCard button.liveDanger{background:#71434d;color:#fff}
+.liveCard button:disabled{opacity:.48}.liveGrid{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:8px}.liveGrid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.liveGrid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.liveBox{padding:13px 16px;margin:11px 0;border:1px solid #557284;background:#0e273a;border-radius:12px}.liveBoxInner{padding:12px;border-radius:9px;background:#1d3b4d;border:1px solid #638294;margin:10px 0}
+.livePanelTop{display:flex;align-items:center;justify-content:space-between;gap:16px}.livePanelTop button{width:auto;white-space:nowrap;font-size:12px}
+.liveMuted,.liveSmall{font-size:12px;color:#c2d1db}.livePill{display:inline-block;font-size:10px;background:#35596d;border:1px solid #638499;border-radius:15px;padding:4px 8px;margin:0 5px 4px 0}
+.liveCrit{display:block;color:#ffbfaa;margin-bottom:5px}.liveScore{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #ffffff26;font-size:13px}
+.liveScore small{font-size:11px;color:#b6cbd9}.liveCard details{padding:9px;border:1px solid #557789;border-radius:9px;margin:8px 0}.liveCard summary{font-weight:800;cursor:pointer}
+.liveCard hr{border:0;border-top:1px solid #5a7487;margin:13px 0}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.stats span{background:#274b5f;border:1px solid #58778b;padding:9px 6px;text-align:center;font-size:11px;border-radius:8px}.stats b{font-size:20px;line-height:1.6}
+.planCard{background:#25465b;border:1px solid #5b8190;border-radius:10px;padding:13px}.planCard strong{font-size:14px}.planCard p{margin:7px 0}.planCard small{font-size:11px;color:#bbd0da;display:block}
+.eventList{font-size:12px;line-height:1.6;padding-left:19px}.good{color:#a4eec6;font-weight:800}.incidentTodo{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;padding:10px 0;border-bottom:1px solid #ffffff25}
+.incidentTodo span:first-child{max-width:80%}
+#liveHud{position:fixed;z-index:5;top:64px;left:12px;pointer-events:none;display:flex;align-items:center;gap:8px;background:#123248e6;color:#fff;padding:7px 11px;border:1px solid #ffffff46;border-radius:10px;font-size:11px;max-width:85vw;box-shadow:0 4px 13px #09233244}
+#liveRole{color:#f6d482;font-weight:800}#liveClock{font-weight:900;font-size:16px;font-variant-numeric:tabular-nums}
+#liveBanner{position:fixed;z-index:6;top:114px;left:50%;transform:translateX(-50%);width:min(89vw,420px);padding:11px;text-align:center;background:#8b4040ed;color:#fff;font-weight:800;border-radius:10px;border:1px solid #e9aab0;pointer-events:none}
+#liveBanner[hidden],#incidentStrip[hidden],#incidentNear[hidden]{display:none!important}
+#incidentStrip{position:fixed;z-index:5;top:112px;left:12px;max-width:min(280px,65vw);padding:8px 11px;background:#1e413cde;color:#eafbf3;border:1px solid #85b69d;border-radius:10px;pointer-events:none;font-size:11px}
+#incidentStrip b{color:#ffdc96}#incidentStrip div{margin-top:3px}
+#incidentNear{position:fixed;z-index:5;bottom:70px;left:50%;transform:translateX(-50%);padding:9px 13px;max-width:min(85vw,380px);background:#1a3448ed;color:#f8e3a5;border:1px solid #f8da87;border-radius:10px;pointer-events:none;font-weight:800;text-align:center;font-size:12px}
+#incidentDialogFacts{background:#24465b;border-left:4px solid #f1ce73;padding:10px;white-space:pre-wrap;font-size:13px;line-height:1.5}
+#joinInfo{display:block;color:#ffdaac;line-height:1.5;font-size:11px;margin-top:10px}
+#offlineNotice{color:#bed5e0;font-size:12px;line-height:1.5}
+@media(pointer:coarse){#waypoint{top:159px;right:9px;max-width:47vw}#liveHud{top:58px;left:9px;right:9px;justify-content:space-between;max-width:none;padding:6px 7px;font-size:10px}#liveRole{font-size:9px;max-width:40vw;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}#liveBudget{font-size:9px}#liveClock{font-size:14px}#incidentStrip{top:101px;left:9px;max-width:72vw}#incidentNear{bottom:156px}}
+@media(max-width:460px){.liveCard{padding:14px}.liveCard.wide{padding:11px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.liveGrid.three{gap:4px}.liveGrid.three button{font-size:11px;padding:6px}#liveHud{gap:4px}}
+@media(max-height:540px){#waypoint{top:96px;max-width:38vw}#incidentStrip{top:52px;left:auto;right:9px;max-width:45vw;font-size:10px}#incidentNear{bottom:100px}#liveHud{top:51px}#liveBanner{top:90px}}
+
+
+/* Edição consolidada: modo de acessibilidade e menus seguros para telas pequenas */
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #ffd478;outline-offset:2px}
+button:disabled{cursor:not-allowed;filter:saturate(.5)}
+#incidentStrip{line-height:1.35;box-shadow:0 3px 12px #12283a50}
+#offlineStatus{font-size:11px;color:#c9dae4;line-height:1.5;margin:6px 0}
+.policyRange{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px}
+.policyRange input[type=range]{padding:0;accent-color:#f9d87d;width:100%;border:0;background:transparent}
+.policyRange output{font-weight:900;min-width:90px;text-align:right;color:#fbd981}
+.policyPreview{background:#234354;border:1px solid #608199;border-radius:9px;padding:10px 12px;font-size:12px;line-height:1.55;margin:8px 0}
+.persistentAlert{border-left:4px solid #eaa879;padding:10px;background:#533d37;border-radius:5px;margin:10px 0;font-size:12px}
+#gameActions button:active{filter:brightness(1.2)}
+@media(pointer:coarse){#incidentStrip{max-width:52vw;font-size:10px}#waypoint{max-width:41vw}}
+@media(max-height:510px){#incidentStrip{top:52px;max-width:43vw}#liveOverlay .liveCard{max-height:96dvh}}
+#onlineState{padding:9px 11px;border-radius:8px;background:#173a45;border:1px solid #4b7d7d;font-size:12px;line-height:1.4;margin:8px 0}
+.demoMode{padding:8px;border:1px dashed #688296;border-radius:8px;margin-top:12px}.demoMode summary{font-size:11px;cursor:pointer;color:#d4e0e6}
+#joinInfo{max-height:85px;overflow:auto}@media(max-height:540px){#joinInfo{max-height:52px}}
+</style></head><body>
+<div id="world"></div>
+<header id="header"><div id="location"><div id="brand">NEXUS RH · CAMPUS COOPERATIVO</div><div id="where">Praça central</div></div><div id="topActions"><button id="mapBtn">⌖ MAPA</button><button id="menuBtn">☰</button><button id="terminalBtn" class="primary">▣ MISSÃO</button></div></header>
+<div id="waypoint"><span id="bearing">↑</span><span id="targetText"></span></div>
+<div id="toast">Explore o campus. Use MAPA para encontrar os departamentos.</div>
+<div id="help">WASD: mover • Shift: correr • Espaço: pular • E: interagir • M: mapa • V: câmera</div>
+<div id="controls"><div id="joy" aria-label="Controle de movimento"><div id="knob"></div></div><div id="gameActions"><button id="jump" aria-label="Pular">⬆ PULAR</button><button id="act" aria-label="Interagir">▣ USAR</button><button id="sprint" aria-pressed="false">⚡ CORRER</button></div></div>
+<div id="mapModal"><div id="mapShell"><div class="modalTop"><h2>Mapa do campus</h2><button class="closeBtn" id="mapClose">FECHAR ✕</button></div><p>Os seis edifícios têm cores próprias. Toque em um para marcar a direção. O triângulo azul mostra sua posição.</p><canvas id="mapCanvas" width="720" height="460"></canvas><div id="mapList"></div><div id="mapInfo">Você está na praça central.</div></div></div>
+<div id="menuModal"><div id="menuCard"><div class="modalTop"><h2>Menu do campus</h2><button class="closeBtn" id="menuClose">✕</button></div><p>Investigue a crise no campus. O painel de decisão pode ser aberto a qualquer momento. No celular, arraste o lado direito da tela para olhar ao redor e use o joystick da esquerda para caminhar.</p><button id="returnCenter">⌖ Voltar à praça central</button><button id="clearTarget">✕ Remover destino do mapa</button></div></div>
+<section id="terminal"><div id="termHead"><b>▣ NEXUS RH · AMBIENTE DE SIMULAÇÃO</b><button class="closeBtn" id="terminalClose">VOLTAR AO CAMPUS ✕</button></div><iframe id="origFrame" title="Painel técnico inativo"></iframe></section>
+<div id="fallback"><h2>O motor 3D não carregou</h2><p>A biblioteca gráfica 3D não carregou. Verifique a internet e permita acesso ao CDN do Three.js; a competição online só será disponibilizada com o novo Firebase.</p><button id="fallbackOpen">ABRIR ATIVIDADES</button></div>
+
+
+<div id="liveHud"><span id="liveRole">NEXUS COOPERATIVO</span><b id="liveRound">AGUARDANDO</b><span id="liveBudget">◈ 100</span><span id="liveClock">--:--</span></div>
+<div id="liveBanner" hidden></div><div id="incidentStrip" hidden></div><div id="incidentNear" hidden></div>
+<section id="liveOverlay" class="liveShow"><div class="liveCard">
+ <div class="liveBrand">NEXUS RH: OVERDRIVE <small>VERSÃO 5 · MULTIPLAYER ONLINE · 3 RODADAS POR PADRÃO</small></div>
+ <h2>Seu personagem, sua empresa</h2><p class="liveMuted">Entre com sua conta do novo Firebase. A equipe é identificada automaticamente; cada navegador controla seu próprio personagem na empresa compartilhada.</p>
+ <label>Nome do personagem<input id="playerName" type="text" maxlength="24" placeholder="Ex.: Alex" autocomplete="off" value=""></label>
+ <label>Código da sala (igual em todos os dispositivos)<input id="roomCode" type="text" maxlength="18" value="NEXUS01" autocomplete="off"></label>
+ <div class="liveGrid two"><label>E-mail do Firebase<input id="loginEmail" type="email" placeholder="equipe1@cyberrh.example" autocomplete="username" autocapitalize="none"></label><label>Senha<input id="loginPass" type="password" placeholder="Sua senha do Authentication" autocomplete="current-password"></label></div>
+ <label id="localTeamLabel" hidden>Equipe para demonstração LOCAL<select id="teamPick"><option value="0">Equipe Alfa</option><option value="1">Equipe Beta</option><option value="2">Equipe Gamma</option><option value="3">Equipe Delta</option><option value="4">Equipe Épsilon</option><option value="5">Equipe Zeta</option></select></label>
+ <label>Roupa do avatar<select id="avatarPick"><option value="0">Azul — Técnico</option><option value="1">Dourado — Gestor</option><option value="2">Verde — Analista</option><option value="3">Roxo — Consultor</option><option value="4">Coral — Operações</option><option value="5">Turquesa — Administrativo</option></select></label>
+ <button id="enterOnline" class="liveAccent">☁ ENTRAR NO NEXUS ONLINE</button>
+ <div id="onlineState" role="status" aria-live="polite">Novo Firebase: conexão pendente. A conta determina se você é Mestre ou Equipe.</div>
+ <details class="demoMode"><summary>Demonstração local (sem Firebase)</summary><p class="liveSmall">Use somente para ensaios isolados. Os dados locais não aparecem para os demais celulares e não valem na competição online.</p><button id="enterTeam">Entrar como jogador DEMO</button><button id="enterMaster">Entrar como Mestre DEMO</button></details>
+ <button id="resumeGame" hidden>Retornar ao jogo</button>
+ <p id="offlineNotice"><b>Firebase independente:</b> este jogo utiliza apenas o projeto NEXUS RH. Para que celulares distintos sincronizem, publique este HTML em endereço HTTPS autorizado no Firebase. O Mestre precisa manter o painel conectado para validar solicitações das equipes; o jogo avisa quando a conexão cair.</p>
+ <small id="joinInfo">Contas de equipe são compartilhadas nesta etapa: cada aparelho terá personagem distinto, mas a autoria segura por aluno exige contas individuais no futuro. Não divulgue a senha do Mestre.</small>
+</div></section>
+<section id="incidentDialog" class="liveOverlay" hidden><div class="liveCard">
+ <div class="liveBrand">INVESTIGAÇÃO NO CAMPUS</div><h2 id="incidentDialogTitle"></h2><p id="incidentDialogText"></p>
+ <div id="incidentDialogFacts"></div><div class="liveGrid two"><button id="incidentCancel">Voltar ao mundo</button><button id="incidentCollect" class="liveAccent">Compartilhar evidência</button></div>
+</div></section>
+<section id="livePanel" class="liveOverlay" hidden><div class="liveCard wide">
+ <div class="livePanelTop"><div><div class="liveBrand">NEXUS RH · CENTRAL OPERACIONAL</div><small id="panelSubtitle">Missão cooperativa</small></div><button id="closeLive">✕ Fechar</button></div>
+ <div id="livePanelBody"></div>
+</div></section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script>
+
+const ORIGINAL=""; // O CYBER RH original não é carregado nem executado.
+const NEXUS_FIREBASE_CONFIG={
+ apiKey:"AIzaSyAHlb3HoXmaWi4pJEKxxiV7HsayJdhDk54",
+ authDomain:"nexus-rh-12fed.firebaseapp.com",
+ databaseURL:"https://nexus-rh-12fed-default-rtdb.firebaseio.com",
+ projectId:"nexus-rh-12fed",
+ storageBucket:"nexus-rh-12fed.firebasestorage.app",
+ messagingSenderId:"743539189018",
+ appId:"1:743539189018:web:393770581a07674931b8a3"
+}; // A configuração pública do app Web NÃO contém senhas de jogadores ou credenciais de administrador.
+const NEXUS_ROOT='nexus/v1/rooms';
+const MASTER_EMAIL='mestre@cyberrh.example';
+function firebaseTeam(email){const m=/^equipe([1-6])@cyberrh\.example$/.exec(String(email||'').toLowerCase());return m?Number(m[1])-1:-1;}
+
+const CRISES=[{"id":"c1","titulo":"Carta 01 — Giga-Bug dos Juniores","setor":"Tecnologia da Informação","ameaca":"AMEAÇA: Risco de demissão coletiva dos Plenos.","desc":"Novos Juniores contratados a R$ 5.500,00. Plenos antigos que os treinam recebem R$ 5.200,00.","consultoresPermitidos":["Carlos (Equidade Interna)","Guilherme (Controller)"]},{"id":"c2","titulo":"Carta 02 — Leviatã da Escala Operacional","setor":"Logística e Operações","ameaca":"AMEAÇA: Quebra na hierarquia e recusa de liderança.","desc":"Reajuste de 12% do sindicato fez Operadores I ganharem o mesmo que Supervisores de Operações.","consultoresPermitidos":["Luiza (Trilha Carreira)","Ana Jully (Consultora Legal)"]},{"id":"c3","titulo":"Carta 03 — Dança das Cadeiras","setor":"Serviços Financeiros / Fintech","ameaca":"AMEAÇA: Fuga de talentos críticos.","desc":"Concorrente ofereceu +40% de salário para Analistas de Riscos Seniores. Três já saíram.","consultoresPermitidos":["Anna (Pesquisa Mercado)","Guilherme (Controller)"]},{"id":"c4","titulo":"Carta 04 — O Cargo Fantasma","setor":"Indústria","ameaca":"AMEAÇA: Dois setores disputam o mesmo enquadramento salarial.","desc":"Na IndusPrime, a Analista de Qualidade recebe R$ 4.600 e investiga falhas, aprova laudos e pode interromper lotes. O Analista Administrativo recebe R$ 5.400 e prepara relatórios e controla contratos sob aprovação do gerente. Ambos têm graduação e 3 anos de experiência. O RH classificou os dois no mesmo nível sem avaliar autonomia, impacto e complexidade. A diretoria dispõe de R$ 1.500/mês para corrigir distorções, sem encargos.","consultoresPermitidos":["Carlos (Equidade Interna)","Luiza (Trilha Carreira)"]},{"id":"c5","titulo":"Carta 05 — O Bônus que Virou Armadilha","setor":"Comercial","ameaca":"AMEAÇA: O programa de bônus recompensa volume, mas incentiva vendas com prejuízo.","desc":"Na NovaVendas, 8 vendedores recebem salário fixo de R$ 3.200 e bônus de 5% sobre o faturamento individual. Um vendedor faturou R$ 100.000 com margem de 4%; outro faturou R$ 80.000 com margem de 25%. O primeiro receberia bônus de R$ 5.000, apesar de gerar margem bruta de R$ 4.000; o segundo receberia R$ 4.000 e gerou margem de R$ 20.000. A diretoria quer rever a regra sem alterar retroativamente direitos já adquiridos.","consultoresPermitidos":["Guilherme (Controller)","Anna (Pesquisa Mercado)"]},{"id":"c6","titulo":"Carta 06 — O Labirinto das Promoções","setor":"Indústria","ameaca":"AMEAÇA: Promoções sem critérios provocam acusações de favoritismo.","desc":"Na IndusPrime, 4 assistentes administrativos recebem R$ 2.800 (rotinas padronizadas), 3 analistas recebem R$ 4.200 (análises e relatórios com autonomia) e 2 supervisores recebem R$ 5.800 (gestão de pessoas e indicadores). Um assistente com 1 ano foi promovido diretamente a supervisor por indicação, sem descrição do novo cargo; uma analista com 5 anos e liderança de projetos foi preterida. A promoção elevará o salário do assistente em R$ 3.000/mês; orçamento disponível para ajustes: R$ 4.500/mês.","consultoresPermitidos":["Luiza (Trilha Carreira)","Guilherme (Controller)"]}];
+(function(){'use strict';
+const $=id=>document.getElementById(id);
+const $term=$('terminal'), $frame=$('origFrame'), $map=$('mapModal'), $menu=$('menuModal');
+let originalLoaded=false, paused=false, target=null, alarm=false, lastToastTimeout=0;
+function inform(msg,ms=2800){const el=$('toast');el.textContent=msg;el.style.opacity=1;clearTimeout(lastToastTimeout);lastToastTimeout=setTimeout(()=>el.style.opacity=0,ms)}
+function openTerminal(){if(!originalLoaded){$frame.srcdoc=ORIGINAL;originalLoaded=true;} $map.classList.remove('show');$menu.classList.remove('show');$term.classList.add('show');paused=true;document.exitPointerLock?.();resetInputs();}
+function closeTerminal(){$term.classList.remove('show');paused=false;}
+$('terminalBtn').onclick=()=>window.nexusOpenPanel?.();$('act').onclick=()=>window.nexusInteract?.();$('fallbackOpen').onclick=()=>window.nexusOpenPanel?.();$('terminalClose').onclick=closeTerminal;
+function openMap(){if($term.classList.contains('show'))return;$menu.classList.remove('show');$map.classList.add('show');paused=true;document.exitPointerLock?.();resetInputs();drawMap();}
+function closeMap(){$map.classList.remove('show');paused=false;}
+$('mapBtn').onclick=openMap;$('mapClose').onclick=closeMap;
+$('menuBtn').onclick=()=>{if($term.classList.contains('show'))return;$menu.classList.add('show');paused=true;document.exitPointerLock?.();resetInputs();};
+$('menuClose').onclick=()=>{$menu.classList.remove('show');paused=false;};
+$('clearTarget').onclick=()=>{target=null;$('waypoint').classList.remove('on');$menu.classList.remove('show');paused=false;inform('Destino removido');};
+
+if(!window.THREE){$('fallback').style.display='block';inform('Motor 3D indisponível. O cenário requer acesso à biblioteca Three.js.',5000);return;}
+// Low-overhead rendering: no shadows, reflections, high-resolution textures or per-block mesh draw calls.
+const mobile=matchMedia('(pointer:coarse)').matches;
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0xb8d9ee);scene.fog=new THREE.Fog(0xb8d9ee,72,115);
+const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.08,125);camera.rotation.order='YXZ';
+const renderer=new THREE.WebGLRenderer({antialias:!mobile,alpha:false,powerPreference:mobile?'low-power':'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,mobile?1.15:1.5)); renderer.setSize(innerWidth,innerHeight);renderer.setClearColor(0xb8d9ee); $('world').appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff,0x7f9b75,1.25)); const sun=new THREE.DirectionalLight(0xfff1d6,1.1);sun.position.set(-30,40,-18);scene.add(sun);
+const palettes={RH:{name:'RECURSOS HUMANOS',short:'RH',color:0xe0a24f,walls:0xecc89b,roof:0xb67a3f},TI:{name:'TECNOLOGIA',short:'TI',color:0x3d93ce,walls:0xaccbdc,roof:0x427a9a},DIR:{name:'DIRETORIA',short:'DIR',color:0x9e79bd,walls:0xd7c5df,roof:0x806196},FIN:{name:'FINANÇAS',short:'FIN',color:0x5baf77,walls:0xc3d9c0,roof:0x387a54},OPS:{name:'OPERAÇÕES',short:'OPS',color:0xea8b51,walls:0xe7be9f,roof:0x9b583a},MST:{name:'CENTRAL DO MESTRE',short:'MESTRE',color:0xbe5963,walls:0xdac3bc,roof:0x8f4b55}};
+const buildings=[
+  {id:'RH',x:-26,z:-22},{id:'TI',x:0,z:-22},{id:'DIR',x:26,z:-22},
+  {id:'FIN',x:-26,z:22},{id:'OPS',x:0,z:22},{id:'MST',x:26,z:22}
+].map(b=>({...b,...palettes[b.id],side:b.z<0?1:-1,get entryZ(){return this.z+this.side*6.9;}}));
+
+const SCENARIOS={
+ c1:{name:'PARALISAÇÃO DOS PLENOS',color:0xee6c45,focus:'TI',subtitle:'Técnicos veteranos interrompem o treinamento dos recém-contratados.',billboard:'JUNIOR R$ 5.500\nPLENO R$ 5.200',kind:'protest',clues:[
+  {dept:'TI',dx:-4,action:'Conversar com os Plenos',title:'Funcionários suspendem treinamento',speech:'“Treinamos quem acabou de chegar, mas recebemos menos. Se a gestão ignorar, vamos sair juntos.”',facts:'Plenos: R$ 5.200. Juniores novos: R$ 5.500. Os Plenos assumem a formação técnica dos contratados.'},
+  {dept:'TI',dx:4,action:'Auditar a folha salarial',title:'Folha de pagamento da TI',speech:'O terminal mostra duas faixas que foram atualizadas em momentos diferentes.',facts:'Diferença mensal por pessoa: R$ 300. A ameaça é de demissão coletiva dos profissionais experientes.'},
+  {dept:'FIN',dx:0,action:'Verificar impacto da correção',title:'Projeção do Controller',speech:'“Um ajuste sem análise de caixa pode resolver uma queixa e abrir outra crise.”',facts:'É preciso propor correção da distorção, estimar custo total e preservar equidade interna.'}]},
+ c2:{name:'OPERAÇÃO SEM LIDERANÇA',color:0xe97d35,focus:'OPS',subtitle:'Supervisores recusam a escala enquanto a produção acumula pedidos.',billboard:'ESCALA BLOQUEADA\nSUPERVISÃO EM CONFLITO',kind:'factory',clues:[
+  {dept:'OPS',dx:-4,action:'Ouvir os supervisores',title:'Supervisores deixam a linha',speech:'“Depois do reajuste de 12%, nossa remuneração empatou com a dos Operadores I. Perdemos responsabilidade reconhecida.”',facts:'Reajuste sindical: 12%. Remuneração de operadores I e supervisores ficou equivalente.'},
+  {dept:'OPS',dx:4,action:'Inspecionar a escala',title:'Escala de operações interrompida',speech:'Funcionários aguardam autorização para iniciar um turno sem supervisão definida.',facts:'Sem liderança operacional, os turnos ficam instáveis e as entregas atrasam.'},
+  {dept:'RH',dx:0,action:'Consultar matriz de carreira',title:'Regras de progressão',speech:'A política atual não diferencia claramente responsabilidade, autonomia e reconhecimento de supervisão.',facts:'Uma solução deve reconhecer responsabilidades, considerar o acordo sindical e documentar critérios.'}]},
+ c3:{name:'EVASÃO DE TALENTOS',color:0xd8a147,focus:'FIN',subtitle:'Analistas seniores estão deixando a empresa com os projetos pela metade.',billboard:'3 SAÍDAS CONFIRMADAS\nOFERTA +40%',kind:'departure',clues:[
+  {dept:'FIN',dx:-4,action:'Entrevistar a equipe de risco',title:'Saída de analistas críticos',speech:'“Três seniores saíram esta semana. Quem ficou teme assumir a carga deles.”',facts:'Três analistas de riscos seniores já saíram. Empresa concorrente ofereceu remuneração 40% superior.'},
+  {dept:'FIN',dx:4,action:'Levantar atividades paradas',title:'Fila de análises acumuladas',speech:'As avaliações de risco críticas se acumulam sem especialistas suficientes.',facts:'A reposição de profissionais demanda tempo e pode comprometer continuidade e controles.'},
+  {dept:'DIR',dx:0,action:'Consultar dados de mercado',title:'Relatório de competitividade',speech:'O mercado paga de forma diferente conforme escassez e criticidade da função.',facts:'Um plano seletivo de retenção pode ser mais sustentável que reajuste indiscriminado de 40%.'}]},
+ c4:{name:'IMPASSE DE CARGOS',color:0x9c76d6,focus:'OPS',subtitle:'Setores entram em conflito após divergência de enquadramento salarial.',billboard:'QUALIDADE R$ 4.600\nADMIN R$ 5.400',kind:'inspection',clues:[
+  {dept:'OPS',dx:-4,action:'Ouvir a Analista de Qualidade',title:'Analista interrompe liberação de lotes',speech:'“Posso bloquear lotes e aprovar laudos. Minha responsabilidade não aparece na descrição do cargo.”',facts:'Qualidade: R$ 4.600, autonomia para investigar falhas, aprovar laudos e interromper lotes.'},
+  {dept:'RH',dx:4,action:'Ler descrição administrativa',title:'Comparação de responsabilidades',speech:'O Analista Administrativo controla contratos e relatórios sob aprovação gerencial.',facts:'Administrativo: R$ 5.400. Ambos têm graduação e três anos de experiência, mas autonomia e impacto distintos.'},
+  {dept:'FIN',dx:0,action:'Conferir limite de ajustes',title:'Teto orçamentário para correção',speech:'“Não há verba para soluções indiscriminadas; façam uma avaliação por fatores.”',facts:'Orçamento disponível: R$ 1.500 mensais para correção das distorções, sem encargos.'}]},
+ c5:{name:'BÔNUS INSUSTENTÁVEL',color:0xe1aa3c,focus:'DIR',subtitle:'Vendedores comemoram recordes, mas a empresa perde margem.',billboard:'R$ 100 MIL • 4%\nBÔNUS R$ 5 MIL',kind:'bonus',clues:[
+  {dept:'DIR',dx:-4,action:'Investigar os contratos',title:'Vendas elevadas, margem insuficiente',speech:'“Bati a meta de faturamento. O bônus é meu!”',facts:'Vendedor 1: R$ 100.000 de faturamento, margem de 4% (R$ 4.000), bônus de R$ 5.000.'},
+  {dept:'FIN',dx:4,action:'Calcular margens líquidas',title:'Comparar resultado financeiro',speech:'O Controller alerta que a remuneração variável está desconectada do lucro.',facts:'Vendedor 2: R$ 80.000, margem de 25% (R$ 20.000), bônus de R$ 4.000.'},
+  {dept:'DIR',dx:4,action:'Examinar contrato de bônus',title:'Direitos já adquiridos',speech:'“A empresa pode mudar o programa para os próximos ciclos, não apagar unilateralmente o que já foi devido.”',facts:'8 vendedores: salário fixo R$ 3.200 e bônus atual de 5% do faturamento. Mudanças devem ser prospectivas.'}]},
+ c6:{name:'PROTESTO POR PROMOÇÃO',color:0xbd6ec7,focus:'RH',subtitle:'Acusações de favorecimento mobilizam funcionários da carreira administrativa.',billboard:'PROMOÇÃO CONTESTADA\nFALTA CRITÉRIO',kind:'promotion',clues:[
+  {dept:'RH',dx:-4,action:'Ouvir a analista preterida',title:'Reclamação de injustiça',speech:'“Liderei projetos durante cinco anos. Promoveram um assistente indicado sem nem descrever o cargo.”',facts:'Analista com cinco anos e liderança de projetos foi preterida. Um assistente de um ano foi indicado a supervisor.'},
+  {dept:'DIR',dx:4,action:'Auditar a promoção',title:'Decisão sem critérios documentados',speech:'O registro de promoção não apresenta análise de competências nem responsabilidades.',facts:'Assistentes: R$ 2.800; analistas: R$ 4.200; supervisores: R$ 5.800. Promoção proposta acrescenta R$ 3.000/mês.'},
+  {dept:'FIN',dx:0,action:'Checar verba disponível',title:'Impacto da decisão',speech:'“É necessário equilibrar direitos, legitimidade e o limite financeiro.”',facts:'Orçamento mensal disponível para ajustes: R$ 4.500. A revisão exige critérios transparentes.'}]}
+};
+
+const staticBoxes=new Map(),colliders=[],npc=[];
+const playerRadius=.42;
+function box(x,y,z,w,h,d,color,solid=false){
+ const key=String(color);if(!staticBoxes.has(key))staticBoxes.set(key,[]);staticBoxes.get(key).push({x,y,z,w,h,d});
+ if(solid)colliders.push({x1:x-w/2,x2:x+w/2,z1:z-d/2,z2:z+d/2});
+}
+function mat(color){return new THREE.MeshLambertMaterial({color});}
+// Ground (one simple plane), plaza, walkways with clear shapes and contrasting materials.
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(100,100),mat(0x83b671));ground.rotation.x=-Math.PI/2;ground.position.y=-.10;scene.add(ground);
+box(0,-.02,0,84,.16,12,0x82959a);box(0,-.016,0,11,.16,86,0x82959a);
+// Wide central square, light border and garden squares.
+box(0,-.01,0,17,.16,17,0xdacbaf);
+const centerRing=new THREE.Mesh(new THREE.RingGeometry(6.2,6.6,48),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide}));centerRing.rotation.x=-Math.PI/2;centerRing.position.y=.09;scene.add(centerRing);
+box(0,.23,0,2.4,.45,2.4,0x6196ac);box(0,.54,0,.5,.4,.5,0xffffff);
+// Characteristic six color buildings, true four-wall collision and open entrances.
+for(const b of buildings){
+ const s=b.side,front=b.z+s*6,back=b.z-s*6,roofY=4.25;
+ box(b.x,.09,b.z,15,.2,12.5,0xc9c6ba);
+ box(b.x,roofY,b.z,15.7,.55,13.2,b.roof); // roof, raised
+ // Three horizontal wall segments on the entrance side leave a real passage.
+ box(b.x-4.45,2.05,front,6.1,4.1,.42,b.walls,true);
+ box(b.x+4.45,2.05,front,6.1,4.1,.42,b.walls,true);
+ box(b.x,3.56,front,2.8,1.08,.42,b.walls); // lintel is overhead, not a horizontal collision
+ box(b.x,2.05,back,15,4.1,.42,b.walls,true);
+ box(b.x-7.5,2.05,b.z,.42,4.1,12.4,b.walls,true);
+ box(b.x+7.5,2.05,b.z,.42,4.1,12.4,b.walls,true);
+ // Door frame visibly distinct; no physical wall in the doorway.
+ box(b.x-1.53,1.55,front+s*.15,.25,3.05,.7,b.color);
+ box(b.x+1.53,1.55,front+s*.15,.25,3.05,.7,b.color);
+ box(b.x,3.08,front+s*.15,3.2,.22,.7,b.color);
+ // Exterior sign band and corners help distinguish solid building volumes.
+ box(b.x,3.99,front+s*.3,11.6,.28,.18,b.color);
+ for(const sideX of [-7.1,7.1])box(b.x+sideX,2,b.z,.25,3.8,12.4,b.color);
+ // Windows on front, in contrast, kept away from the doorway.
+ for(let ix=-5.7;ix<=5.7;ix+=3.8){if(Math.abs(ix)<2.7)continue;box(b.x+ix,2.2,front+s*.30,1.65,1.65,.10,0x577789);}
+ // Side windows have clean horizontal rhythm.
+ for(const sideX of [-7.82,7.82])for(const wZ of [-3,0,3])box(b.x+sideX,2.18,b.z+wZ,.12,1.25,1.75,0x769ca7);
+ // Accent stripes on roofs and identifying architectural silhouettes.
+ box(b.x,4.58,b.z,13,.13,10.7,b.color);
+ if(b.id==='TI'){for(const xx of [-2.2,2.2])box(b.x+xx,5.63,b.z,1.1,1.9,1.1,0x5d7688);}
+ if(b.id==='RH'){box(b.x,5.1,b.z,7,.6,2.2,0xffe2ac);}
+ if(b.id==='DIR'){box(b.x,5.35,b.z,4,1.4,3.6,0x9573a8);box(b.x,6.25,b.z,.8,.5,.8,0xf1d5ff);}
+ if(b.id==='FIN'){for(const x of [-4.5,4.5])box(b.x+x,5.1,b.z,1,1.1,1,0x4b8e69);}
+ if(b.id==='OPS'){box(b.x+4,5.7,b.z-2,1.6,2.7,1.6,0xb15d3b);}
+ if(b.id==='MST'){box(b.x,5.3,b.z,3,1.6,3,0x9e4656);box(b.x,6.18,b.z,.9,.35,.9,0xf5d194);}
+ // Interior functional silhouettes. Each uses its own color scheme.
+ const desk= b.id==='TI'?0x446a7f:b.id==='RH'?0xa57b55:b.id==='FIN'?0x689476:b.id==='OPS'?0x9e7259:b.id==='MST'?0x996a70:0x80708c;
+ if(b.id==='TI'){
+   for(const x of [-4,4])for(const dz of [-2.1,1.2]){box(b.x+x,1.15,b.z+dz,1.1,2.25,1.9,0x364f64,true);box(b.x+x,1.5,b.z+dz+s*.99,.8,.25,.09,0x39c7e6);}
+ }else if(b.id==='OPS'){
+   for(const x of [-4,4]){box(b.x+x,.9,b.z-.5,2.3,1.8,2.5,desk,true);box(b.x+x,1.95,b.z-.5,1.3,.25,1.2,0xf0bf78);}
+ }else if(b.id==='MST'){
+   box(b.x,1.0,b.z-s*2.0,6.8,1.8,1.3,desk,true);
+   for(const x of [-2.2,0,2.2])box(b.x+x,2.0,b.z-s*2.0,1.55,.9,.15,0x304d65);
+ }else if(b.id==='DIR'){
+   box(b.x,1.0,b.z,6.2,.75,2.1,desk,true);
+   for(const x of [-3,3])box(b.x+x,.6,b.z,1.1,1.05,1.2,0x63546e,true);
+ }else{
+   for(const x of [-3.7,3.7]){box(b.x+x,1.0,b.z-s*.4,2.5,.55,1.4,desk,true);box(b.x+x,1.6,b.z-s*.4,1.3,.85,.16,0x435f70);}
+ }
+ // Short coloured entrance carpet and a perpendicular path to the primary corridor.
+ box(b.x,.02,b.z+s*9,3.6,.09,6.1,0xa3abb0);
+ box(b.x,.09,b.z+s*7.4,3,.08,1.3,b.color);
+}
+// Clear colored signs with high contrast (6 textures, not hundreds of separate text meshes).
+function signTexture(label,color){const cv=document.createElement('canvas');cv.width=512;cv.height=128;const ctx=cv.getContext('2d');
+ ctx.fillStyle='#193346';ctx.fillRect(0,0,512,128);ctx.fillStyle='#'+color.toString(16).padStart(6,'0');ctx.fillRect(0,0,14,128);ctx.fillRect(498,0,14,128);
+ ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold '+(label.length>16?'30':'40')+'px Arial';ctx.fillText(label,256,64,460);
+ const tx=new THREE.CanvasTexture(cv);tx.anisotropy=1;return tx;}
+for(const b of buildings){const s=b.side;const board=new THREE.Mesh(new THREE.PlaneGeometry(6.6,1.64),new THREE.MeshBasicMaterial({map:signTexture(b.name,b.color),side:THREE.DoubleSide}));
+ board.position.set(b.x,3.5,b.z+s*6.28);if(s<0)board.rotation.y=Math.PI;scene.add(board);
+ // Visible local portal beacon, simple, stable.
+ const pole=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,2.4,6),mat(b.color));pole.position.set(b.x+5.8,1.2,b.z+s*8.5);scene.add(pole);
+ const head=new THREE.Mesh(new THREE.BoxGeometry(.6,.5,.6),mat(b.color));head.position.set(b.x+5.8,2.65,b.z+s*8.5);scene.add(head);
+}
+// Trees and greenery are distinct but sparse for mobile performance.
+const trees=[[-43,-42],[-38,-32],[-43,32],[-40,43],[40,-40],[43,-26],[43,32],[40,44],[-14,0],[14,0],[-15,-6],[15,6],[-15,7],[15,-7]];
+for(const [x,z] of trees){box(x,.75,z,.48,1.5,.48,0x735942);box(x,1.9,z,2.6,2.35,2.6,0x498e5f);box(x,2.7,z,1.55,.75,1.55,0x66ab6a);}
+for(const x of [-37,37])for(const z of [-11,11])box(x,.18,z,3,.36,2,0x66915b);
+// One bench on each side of the central plaza; not cluttering the walking corridors.
+for(const x of [-11,11]){box(x,.6,0,1.3,.23,3,0x886b50,true);box(x,.95,0,.25,.8,3,0x8d7055,true);}
+// Instancing merges all similarly coloured blocks into a single draw call per material.
+const unit=new THREE.BoxGeometry(1,1,1),dummy=new THREE.Object3D();
+for(const [key,items] of staticBoxes){const inst=new THREE.InstancedMesh(unit,mat(Number(key)),items.length);inst.frustumCulled=false;
+ items.forEach((o,i)=>{dummy.position.set(o.x,o.y,o.z);dummy.scale.set(o.w,o.h,o.d);dummy.rotation.set(0,0,0);dummy.updateMatrix();inst.setMatrixAt(i,dummy.matrix);});
+ inst.instanceMatrix.needsUpdate=true;scene.add(inst);
+}
+// Six low-poly employees, not dozens of independent animation loops.
+for(const b of buildings){const g=new THREE.Group(),uniform=mat(b.color),skin=mat(0xe5b893),pants=mat(0x394d5b);
+ const mesh=(w,h,d,m,x,y,z)=>{const o=new THREE.Mesh(unit,m);o.scale.set(w,h,d);o.position.set(x,y,z);g.add(o);return o;};
+ mesh(.72,.95,.42,uniform,0,1.35,0);mesh(.53,.52,.48,skin,0,2.12,0);
+ const armL=mesh(.18,.84,.25,skin,-.51,1.3,0),armR=mesh(.18,.84,.25,skin,.51,1.3,0);
+ const legL=mesh(.25,.8,.3,pants,-.2,.48,0),legR=mesh(.25,.8,.3,pants,.2,.48,0);
+ g.position.set(b.x+4.5,0,b.z+b.side*8.7);scene.add(g);npc.push({g,armL,armR,legL,legR,homeX:b.x,baseZ:b.z+b.side*8.7,phase:b.x});
+}
+// Couriers/technicians cross the central plaza (lightweight block characters).
+for(let i=0;i<4;i++){
+ const g=new THREE.Group(),u=mat([0xe5a65a,0x559ac1,0x689b77,0x8a79b5][i]),skin=mat(0xe2b998),pants=mat(0x374957);
+ const part=(w,h,d,m,x,y,z)=>{const ob=new THREE.Mesh(unit,m);ob.position.set(x,y,z);ob.scale.set(w,h,d);g.add(ob);return ob;};
+ part(.7,.9,.4,u,0,1.3,0);part(.55,.55,.5,skin,0,2.08,0);
+ const armL=part(.2,.8,.25,skin,-.48,1.25,0),armR=part(.2,.8,.25,skin,.48,1.25,0);
+ const legL=part(.23,.8,.29,pants,-.18,.46,0),legR=part(.23,.8,.29,pants,.18,.46,0);
+ g.position.set(0,0,-10+i*6);scene.add(g);npc.push({g,armL,armR,legL,legR,homeX:0,baseZ:-10+i*6,phase:i});
+}
+
+
+// Motor de incidentes. Todos os fatos e personagens correspondem às seis cartas de origem.
+let activeIncidentKey='', incident3D=null, activeClue=null;
+function taskLocations(cardId){const sc=SCENARIOS[cardId];if(!sc)return [];
+ return sc.clues.map((q,i)=>{const b=buildings.find(b=>b.id===q.dept);return {...q,id:cardId+':'+i,i,x:b.x+q.dx,z:b.entryZ+b.side*2.75,building:b};});}
+function labelSprite(text,color=0xeed58c,wide=4.3){const cv=document.createElement('canvas');cv.width=512;cv.height=192;const c=cv.getContext('2d');
+ c.fillStyle='#142d3b';c.fillRect(0,0,512,192);c.strokeStyle='#'+color.toString(16).padStart(6,'0');c.lineWidth=12;c.strokeRect(7,7,498,178);
+ c.textAlign='center';c.textBaseline='middle';c.fillStyle='#fff';c.font='bold 32px system-ui';const lines=String(text).split('\n');
+ lines.forEach((line,i)=>c.fillText(line.slice(0,27),256,lines.length===1?94:57+i*72,472));
+ const tex=new THREE.CanvasTexture(cv),o=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,depthTest:false,transparent:true}));o.scale.set(wide,wide*.375,1);return o;
+}
+function personMesh(parent,x,z,color,signText=''){const g=new THREE.Group();const torso=mat(color),skin=mat(0xdcb48f),pants=mat(0x344451);
+ const add=(w,h,d,m,xx,yy,zz)=>{const o=new THREE.Mesh(unit,m);o.scale.set(w,h,d);o.position.set(xx,yy,zz);g.add(o);return o;};
+ add(.72,.9,.43,torso,0,1.35,0);add(.54,.53,.49,skin,0,2.08,0);
+ const aL=add(.19,.75,.25,skin,-.48,1.36,0),aR=add(.19,.75,.25,skin,.48,1.36,0),lL=add(.24,.8,.3,pants,-.2,.46,0),lR=add(.24,.8,.3,pants,.2,.46,0);
+ if(signText){add(.07,.8,.08,mat(0x77563c),.64,2.37,0);const sg=labelSprite(signText,0xe78c74,2.15);sg.position.set(.64,3.22,0);g.add(sg);}
+ g.position.set(x,0,z);parent.add(g);return {g,aL,aR,lL,lR,x0:x,z0:z,behavior:'waiting',step:0,wait:0};
+}
+function disposeIncident(){if(!incident3D)return;scene.remove(incident3D.group);incident3D.group.traverse(o=>{if(o.isSprite){o.material.map?.dispose();o.material.dispose();}else if(o.isMesh){if(o.geometry!==unit)o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();}});incident3D=null;activeIncidentKey='';}
+function createIncident(cardId){const sc=SCENARIOS[cardId];if(!sc)return;const b=buildings.find(x=>x.id===sc.focus),group=new THREE.Group(),actors=[],markers=[],props=[];
+ const colors=[0xeccc80,0x8bdcb6,0x9ecaf2];for(const p of taskLocations(cardId)){
+  const g=new THREE.Group();g.position.set(p.x,0,p.z);group.add(g);
+  const base=new THREE.Mesh(unit,mat(0x344952));base.position.y=.18;base.scale.set(1.35,.38,1.1);g.add(base);
+  const pillar=new THREE.Mesh(unit,mat(colors[p.i]));pillar.position.y=1.12;pillar.scale.set(.42,1.6,.42);g.add(pillar);
+  const head=new THREE.Mesh(unit,mat(sc.color));head.position.y=2;head.scale.set(.85,.2,.85);g.add(head);
+  const label=labelSprite(p.action.toUpperCase(),colors[p.i],3.85);label.position.y=3.2;g.add(label);
+  markers.push({g,p,head,pillar});
+ }
+ const ax=b.x,az=b.entryZ+b.side*2.4;
+ const sign=labelSprite(sc.billboard,sc.color,6);sign.position.set(ax,4.8,az+b.side*1.3);group.add(sign);
+ // Different crisis compositions rather than interchangeable NPC oscillation.
+ for(let i=0;i<7;i++){
+   const sx=ax-3.8+i*1.23,sz=az+b.side*(i%2?1.2:.1),kind=sc.kind;
+   const board=kind==='protest'?(i%2===0?'JUSTIÇA!':''):
+      kind==='promotion'?(i%2===0?'CRITÉRIOS!':''):'';
+   const p=personMesh(group,sx,sz,[0x547d9a,0x9f7b53,0x866fa1,0x5c9886][i%4],board);
+   p.behavior=kind==='departure'&&i<3?'leaving':kind==='factory'&&i<3?'machine':kind==='bonus'&&i%2===0?'argue':kind==='inspection'?'audit':board?'protest':'discuss';
+   p.offset=i;actors.push(p);
+ }
+ if(sc.kind==='factory')for(let i=0;i<3;i++){let o=new THREE.Mesh(unit,mat(0x9b5c4c));o.scale.set(2.4,1.3,1.8);o.position.set(ax-3+i*3,.85,az-b.side*1.2);group.add(o);props.push(o);}
+ if(sc.kind==='inspection')for(let i=0;i<3;i++){let o=new THREE.Mesh(unit,mat(0xc4aa70));o.scale.set(1.4,.2,1.0);o.position.set(ax-3+i*2.6,1.1,az-b.side*.5);group.add(o);props.push(o);}
+ if(sc.kind==='departure')for(let i=0;i<3;i++){let o=new THREE.Mesh(unit,mat(0x644d41));o.scale.set(.45,.7,.4);o.position.set(ax-3+i*2,.4,az+b.side*1.7);group.add(o);props.push(o);}
+ if(sc.kind==='bonus')for(let i=0;i<4;i++){let o=new THREE.Mesh(unit,mat(i===0?0xd25e56:0x70b483));o.scale.set(.8,i%2===0?1.4:2.6,.8);o.position.set(ax-3+i*2,o.scale.y/2+.2,az-b.side*1.8);group.add(o);props.push(o);}
+ const meetingB=buildings.find(x=>x.id==='DIR');const meeting=new THREE.Group();meeting.position.set(meetingB.x,0,meetingB.entryZ+meetingB.side*2.5);group.add(meeting);
+ const mBase=new THREE.Mesh(unit,mat(0x536784));mBase.scale.set(1.4,.35,1.4);mBase.position.y=.23;meeting.add(mBase);
+ const mTop=new THREE.Mesh(unit,mat(0xffd97d));mTop.scale.set(.5,1.4,.5);mTop.position.y=1.24;meeting.add(mTop);
+ const mSign=labelSprite('SALA DE DECISÃO',0xf5d67c,4.1);mSign.position.y=3.14;meeting.add(mSign);
+ const deploy=new THREE.Group();deploy.position.set(ax+4.5,0,b.entryZ+b.side*2.5);group.add(deploy);
+ const dBase=new THREE.Mesh(unit,mat(0x4d735a));dBase.scale.set(1.35,.35,1.2);dBase.position.y=.22;deploy.add(dBase);
+ const dTop=new THREE.Mesh(unit,mat(0x7fdfa2));dTop.scale.set(.5,1.6,.5);dTop.position.y=1.22;deploy.add(dTop);
+ const dLabel=labelSprite('IMPLEMENTAR PLANO',0x79dfa1,4);dLabel.position.y=3.22;deploy.add(dLabel);
+ scene.add(group);incident3D={group,id:cardId,sc,b,actors,markers,props,meeting,deploy,mSign,dLabel,meetingB};activeIncidentKey=cardId;
+}
+function animateWorldNpc(now,dt){const sec=now*.001;for(let i=0;i<npc.length;i++){
+ const n=npc[i];if(!n.route){const x=n.homeX,z=n.baseZ;n.route=i<6?[[x-3.5,z],[x+3,z],[x+3,z+(i%2?1.6:-1.6)],[x-2,z]]:
+  [[-8+i*2.2,-11],[-8+i*2.2,10],[-4+i*2.2,10],[-4+i*2.2,-11]];n.wp=i%n.route.length;n.pause=(i%4)*.55;n.routeSpeed=.65+(i%3)*.18;}
+ if(n.pause>0){n.pause-=dt;n.armL.rotation.x=.1*Math.sin(sec*2+i);n.armR.rotation.x=-n.armL.rotation.x;n.legL.rotation.x=n.legR.rotation.x=0;continue;}
+ const [x,z]=n.route[n.wp],dx=x-n.g.position.x,dz=z-n.g.position.z,dist=Math.hypot(dx,dz);
+ if(dist<.22){n.wp=(n.wp+1)%n.route.length;n.pause=.7+(i%3)*1.2;continue;}
+ const step=Math.min(dist,n.routeSpeed*dt);n.g.position.x+=dx/dist*step;n.g.position.z+=dz/dist*step;n.g.rotation.y=Math.atan2(-dx,-dz);
+ const sway=Math.sin(sec*7+i)*.5;n.armL.rotation.x=sway;n.armR.rotation.x=-sway;n.legL.rotation.x=-sway;n.legR.rotation.x=sway;
+ }}
+function moveActor(p,tx,tz,dt,speed=1.2){
+ const dx=tx-p.g.position.x,dz=tz-p.g.position.z,dist=Math.hypot(dx,dz);
+ if(dist<.04){p.g.position.set(tx,0,tz);p.lL.rotation.x=p.lR.rotation.x=0;return false;}
+ const step=Math.min(dist,dt*speed);p.g.position.x+=dx/dist*step;p.g.position.z+=dz/dist*step;
+ p.g.rotation.y=Math.atan2(-dx,-dz);
+ p.step+=dt*9;const w=Math.sin(p.step)*.45;p.lL.rotation.x=w;p.lR.rotation.x=-w;p.aL.rotation.x=-w;p.aR.rotation.x=w;
+ return true;
+}
+function animateScenario(now,dt){
+ if(!incident3D)return;
+ const {sc,actors,markers,deploy,meeting,props}=incident3D;
+ const run=currentRun(),implemented=Boolean(run?.implementation),outcome=run?.implementation?.outcome||'',stage=escalationStage(),sec=now*.001;
+ for(const p of actors){
+  const i=p.offset,b=p.behavior,dx=(i%2===0?-1:1);
+  const tension=!implemented&&stage>=2;
+  // Destinos com começo e fim. Funcionários param, conversam e executam tarefas, não repetem trajetos mecânicos.
+  if(implemented&&outcome==='estabilizada'){
+   const tx=p.x0+dx*(i%3)*.7,tz=p.z0-(i%2?.6:1.2);
+   if(!moveActor(p,tx,tz,dt,.85)){p.aL.rotation.x=.12;p.aR.rotation.x=-.12;}
+  }else if(implemented&&outcome==='parcial'){
+   if(i<3){p.g.position.set(p.x0,0,p.z0);p.aR.rotation.x=-.55;p.lL.rotation.x=p.lR.rotation.x=0;}
+   else moveActor(p,p.x0+dx*.9,p.z0-.9,dt,.7);
+  }else if(implemented&&outcome==='colapso'){
+   if(i<4)moveActor(p,p.x0+dx*6,p.z0+6,dt,1.45);
+   else {p.g.position.set(p.x0,0,p.z0);p.aL.rotation.x=-1;p.aR.rotation.x=-.7;}
+  }else if(b==='leaving'){
+   // Na fuga de talentos, três analistas realmente deixam o setor e NÃO retornam após sumirem.
+   if(i<3){const targetZ=p.z0+7+(stage>=2?3:0);moveActor(p,p.x0+7+i*.5,targetZ,dt,.55+stage*.27);}
+   else {p.g.position.set(p.x0,0,p.z0);p.aL.rotation.x=-.8;p.aR.rotation.x=-.4;}
+  }else if(b==='protest'){
+   // Manifestação salarial: funcionários se aproximam do portão uma vez e exigem negociação.
+   if(tension&&i>=3)moveActor(p,p.x0,p.z0+.9,dt,.75);
+   else p.g.position.set(p.x0,0,p.z0);
+   p.aR.rotation.x=-.9-.15*Math.sin(sec*3+i);p.aL.rotation.x=-.2;p.lL.rotation.x=p.lR.rotation.x=0;
+  }else if(b==='machine'){
+   // Supervisores abandonam postos, linha para; operadores permanecem aguardando instruções.
+   if(i<3)moveActor(p,p.x0+dx*2.8,p.z0+2.2,dt,.85);
+   else {p.g.position.set(p.x0,0,p.z0);p.aL.rotation.x=tension?-1:-.2;p.aR.rotation.x=-.2;}
+  }else if(b==='audit'){
+   // Inspeção de lotes: auditor vai a estação e interrompe liberação, grupo aguarda decisão.
+   if(i<2)moveActor(p,p.x0+dx*1.3,p.z0-1.5,dt,.7);
+   else {p.g.position.set(p.x0,0,p.z0);p.aR.rotation.x=tension?-1:-.2;p.aL.rotation.x=-.3;}
+  }else if(b==='argue'||b==='discuss'){
+   // Comercial / promoções: grupos em mesa de discussão; protestos aparecem somente nas cartas relacionadas.
+   const tx=p.x0+(i%2?.7:-.7),tz=p.z0+(tension?.6:0);
+   if(!moveActor(p,tx,tz,dt,.6)){p.aR.rotation.x=-.45+(i%3)*.13;p.aL.rotation.x=-.22;p.lL.rotation.x=p.lR.rotation.x=0;}
+  }else{
+   p.g.position.set(p.x0,0,p.z0);p.aL.rotation.x=-.7;p.aR.rotation.x=-1.1;p.lL.rotation.x=p.lR.rotation.x=0;
+  }
+ }
+ const collected=new Set(Object.keys(run?.evidence||{}));
+ for(const {g,p,head,pillar} of markers){g.visible=!collected.has(p.id)&&!implemented&&game?.status==='active';head.rotation.y=sec*.9;pillar.scale.y=1+.13*Math.sin(sec*2+p.i);}
+ meeting.visible=!implemented;deploy.visible=!implemented&&Boolean(run?.proposal?.approved);
+ if(meeting.visible)meeting.position.y=.06*Math.sin(sec*2.4);
+ if(deploy.visible)deploy.position.y=.08*Math.sin(sec*2.2);
+ if(sc.kind==='factory')for(let i=0;i<props.length;i++)props[i].rotation.y=implemented?.02*Math.sin(sec):.05*Math.sin(sec*.8+i);
+ const nearby=nearestAction(),tip=$('incidentNear');if(nearby&&nearby.d<5.1){tip.hidden=false;tip.textContent='▣ USAR · '+nearby.label;}else tip.hidden=true;
+}
+
+// Movement and collision: radius-aware swept substeps, separating X and Z to slide along walls.
+let px=0,pz=0,py=1.7,vY=0,yaw=0,pitch=-.02,grounded=true,sprint=false;
+const keys=Object.create(null),joy={x:0,y:0},eyeHeight=1.7;
+function resetInputs(){for(const k of Object.keys(keys))keys[k]=false;joy.x=joy.y=0;$('knob').style.transform='translate(0px,0px)';}
+function blocked(x,z){if(x< -48+playerRadius||x>48-playerRadius||z< -48+playerRadius||z>48-playerRadius)return true;
+ for(const c of colliders){if(x+playerRadius>c.x1&&x-playerRadius<c.x2&&z+playerRadius>c.z1&&z-playerRadius<c.z2)return true;}return false;}
+function walk(dx,dz){const d=Math.hypot(dx,dz);const steps=Math.max(1,Math.ceil(d/.18));for(let i=0;i<steps;i++){
+  const nx=px+dx/steps;if(!blocked(nx,pz))px=nx;
+  const nz=pz+dz/steps;if(!blocked(px,nz))pz=nz;
+}}
+function jump(){if(grounded&&!paused){grounded=false;vY=6.5;}}
+function setSprint(v){sprint=v;$('sprint').classList.toggle('active',sprint);$('sprint').setAttribute('aria-pressed',String(sprint));}
+const btnRun=$('sprint'),btnJump=$('jump');
+btnRun.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();setSprint(!sprint);});
+btnJump.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();jump();});
+btnRun.addEventListener('click',e=>e.preventDefault());
+btnJump.addEventListener('click',e=>e.preventDefault());
+$('returnCenter').onclick=()=>{px=pz=0;py=eyeHeight;vY=0;grounded=true;yaw=0;pitch=-.02;$menu.classList.remove('show');paused=false;inform('Você voltou à praça central');};
+window.addEventListener('keydown',e=>{if(e.key==='Escape'){if($map.classList.contains('show'))closeMap();else if($menu.classList.contains('show')){$menu.classList.remove('show');paused=false;}else if($term.classList.contains('show'))closeTerminal();return;}
+ if(paused)return;const k=e.key.toLowerCase();if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();if(k==='m'){openMap();return;}if(k==='tab'){e.preventDefault();window.nexusOpenPanel?.();return;}if(k==='e'){window.nexusInteract?.();return;}if(k===' '){if(!e.repeat)jump();return;}keys[k]=true;});
+window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});window.addEventListener('blur',resetInputs);
+renderer.domElement.addEventListener('click',()=>{if(!mobile&&!paused)renderer.domElement.requestPointerLock?.();});
+window.addEventListener('mousemove',e=>{if(document.pointerLockElement===renderer.domElement&&!paused){yaw-=e.movementX*.0025;pitch=Math.max(-1.2,Math.min(1.2,pitch-e.movementY*.0025));}});
+// Mobile: left thumbstick for movement and right-hand dragging for camera.
+const joystick=$('joy'),knob=$('knob');let joyId=null;
+function updateJoy(e){const r=joystick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;
+ const len=Math.hypot(dx,dy),limit=r.width*.35;if(len>limit){dx*=limit/len;dy*=limit/len;}joy.x=dx/limit;joy.y=-dy/limit;knob.style.transform=`translate(${dx}px,${dy}px)`;}
+joystick.addEventListener('pointerdown',e=>{e.preventDefault();joyId=e.pointerId;joystick.setPointerCapture(e.pointerId);updateJoy(e);});
+joystick.addEventListener('pointermove',e=>{if(joyId===e.pointerId)updateJoy(e);});
+function endJoy(e){if(joyId===e.pointerId){joyId=null;joy.x=joy.y=0;knob.style.transform='translate(0px,0px)';}};
+joystick.addEventListener('pointerup',endJoy);joystick.addEventListener('pointercancel',endJoy);joystick.addEventListener('lostpointercapture',endJoy);
+const fingers=new Map();const canvas=renderer.domElement;canvas.style.touchAction='none';
+canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'&&!paused){fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);}});
+canvas.addEventListener('pointermove',e=>{if(e.pointerType!=='touch'||!fingers.has(e.pointerId)||paused)return;const prev=fingers.get(e.pointerId);yaw-=(e.clientX-prev.x)*.005;pitch=Math.max(-1.2,Math.min(1.2,pitch-(e.clientY-prev.y)*.004));prev.x=e.clientX;prev.y=e.clientY;});
+for(const ev of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(ev,e=>fingers.delete(e.pointerId));
+// Map overview: one hidden full-page map instead of a permanent, overlapping minimap.
+const c=$('mapCanvas'),ctx=c.getContext('2d'),mapList=$('mapList');const mapRect={minX:-48,maxX:48,minZ:-48,maxZ:48};
+function tx(x){return (x+48)/96*c.width;}function tz(z){return (z+48)/96*c.height;}
+// Use normalized projected aspect in both axes while keeping buildings recognizable.
+function mX(x){return ((x+48)/96)*c.width;}function mZ(z){return ((z+48)/96)*c.height;}
+function drawMap(){ctx.fillStyle='#8fb881';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#7c929c';ctx.fillRect(mX(-6),0,mX(12)-mX(0),c.height);
+ ctx.fillRect(0,mZ(-6),c.width,mZ(12)-mZ(0));ctx.fillStyle='#decdb0';ctx.fillRect(mX(-9),mZ(-9),mX(18)-mX(0),mZ(18)-mZ(0));
+ for(const b of buildings){const xx=mX(b.x),zz=mZ(b.z),ww=mX(14)-mX(0),dd=mZ(12)-mZ(0);ctx.fillStyle='#'+b.color.toString(16).padStart(6,'0');ctx.fillRect(xx-ww/2,zz-dd/2,ww,dd);ctx.lineWidth=3;ctx.strokeStyle='#ffffff';ctx.strokeRect(xx-ww/2,zz-dd/2,ww,dd);ctx.fillStyle='#173047';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 21px system-ui';ctx.fillText(b.short,xx,zz);
+  if(target===b){ctx.lineWidth=5;ctx.strokeStyle='#f5d452';ctx.strokeRect(xx-ww/2-4,zz-dd/2-4,ww+8,dd+8);}}
+ if(target){ctx.setLineDash([9,9]);ctx.strokeStyle='#f9f275';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(mX(px),mZ(pz));ctx.lineTo(mX(target.x),mZ(target.entryZ));ctx.stroke();ctx.setLineDash([]);}
+ ctx.save();ctx.translate(mX(px),mZ(pz));ctx.rotate(-yaw);ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(10,10);ctx.lineTo(0,5);ctx.lineTo(-10,10);ctx.closePath();ctx.fillStyle='#1f65d4';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#ffffff';ctx.stroke();ctx.restore();
+ ctx.fillStyle='#203d4e';ctx.font='bold 17px system-ui';ctx.textAlign='center';ctx.fillText('N',c.width/2,14);
+ $('mapInfo').textContent=target?`Destino: ${target.name} · ${Math.round(Math.hypot(target.x-px,target.entryZ-pz))} m. Feche o mapa e siga a seta.`:'Selecione um departamento para marcar seu destino.';
+ for(const button of mapList.querySelectorAll('button'))button.classList.toggle('sel',button.dataset.id===target?.id);
+}
+for(const b of buildings){const btn=document.createElement('button');btn.dataset.id=b.id;btn.textContent=b.short+' · '+b.name;btn.onclick=()=>{target=b;closeMap();inform('Destino marcado: '+b.name);};btn.style.borderTop='4px solid #'+b.color.toString(16).padStart(6,'0');mapList.appendChild(btn);}
+c.addEventListener('click',e=>{const r=c.getBoundingClientRect(),x=((e.clientX-r.left)/r.width)*96-48,z=((e.clientY-r.top)/r.height)*96-48;let closest=null,dist=Infinity;for(const b of buildings){const d=Math.hypot(x-b.x,z-b.z);if(d<dist){dist=d;closest=b;}}if(dist<15){target=closest;closeMap();inform('Destino: '+closest.name);}});
+function updateWaypoint(){if(!target){$('waypoint').classList.remove('on');return;}$('waypoint').classList.add('on');
+ const dx=target.x-px,dz=target.entryZ-pz,angle=Math.atan2(-dx,-dz);let delta=angle-yaw;delta=((delta+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;
+ $('bearing').textContent=Math.abs(delta)<.35?'↑':Math.abs(delta)>2.7?'↓':delta>0?'↶':'↷';$('targetText').textContent=target.short+' · '+Math.round(Math.hypot(dx,dz))+' m';}
+let last=performance.now(),lastNav=0;const frameStep=mobile?1000/28:1000/50;let lastRender=0;
+function loop(now){requestAnimationFrame(loop);if(document.hidden)return;if(now-lastRender<frameStep)return;lastRender=now;
+ const dt=Math.min(.05,Math.max(0,(now-last)/1000));last=now;
+ if(!paused){const right=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x;
+ const forward=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0)+joy.y;
+ let l=Math.hypot(right,forward);if(l>1)l=1/l;else l=1;
+ const speed=(sprint||keys.shift)?8.3:4.8;
+ const dx=(right*Math.cos(yaw)-forward*Math.sin(yaw))*speed*dt*l;
+ const dz=(-right*Math.sin(yaw)-forward*Math.cos(yaw))*speed*dt*l;
+ walk(dx,dz);
+ if(!grounded){py+=vY*dt;vY-=18*dt;if(py<=eyeHeight){py=eyeHeight;vY=0;grounded=true;}}
+ camera.position.set(px,py,pz);camera.rotation.set(pitch,yaw,0,'YXZ');
+ if(now-lastNav>240){lastNav=now;let near=buildings.reduce((a,b)=>Math.hypot(b.x-px,b.entryZ-pz)<Math.hypot(a.x-px,a.entryZ-pz)?b:a,buildings[0]);const d=Math.hypot(near.x-px,near.entryZ-pz);
+  $('where').textContent=d<12?'Próximo: '+near.name:'Praça central · 6 departamentos';updateWaypoint();}
+ }
+ animateWorldNpc(now,dt);
+ animateScenario(now,dt);animateAvatars(now,dt);
+ if(alarm){const active=Math.sin(now*.009)>0;scene.background.setHex(active?0xd0afae:0xb8d9ee);sun.color.setHex(active?0xff9d92:0xfff1d6);}else{scene.background.setHex(0xb8d9ee);sun.color.setHex(0xfff1d6);}
+ renderer.render(scene,camera);
+}
+window.addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();});document.addEventListener('visibilitychange',()=>{last=performance.now();resetInputs();});
+camera.position.set(px,py,pz);inform('Campus reorganizado: siga as placas coloridas. MAPA mostra os destinos.',4000);
+requestAnimationFrame(loop);
+// Debug-only hook for local verification of geometry, boundaries and input behavior (does not expose game secrets).
+window.__nexusDebug={blocked,walk,state:()=>({x:px,z:pz,y:py}),buildings,colliders,setPosition:(x,z)=>{px=x;pz=z;},step:(dx,dz)=>walk(dx,dz),drawMap};
+
+// NEXUS RH • módulo cooperativo V4, LOCAL. Nenhum Firebase legado é importado.
+// INTEGRAÇÃO FUTURA: com o NOVO Firebase, substituir loadGame/saveGame/mutate/send/handleMessage e autenticação.
+// Somente o servidor do novo projeto deverá autorizar papéis, decisões e acesso a dados sigilosos.
+// Nunca utilizar credenciais, URL ou banco do CYBER RH original.
+const TEAM_NAMES=['Alfa','Beta','Gamma','Delta','Épsilon','Zeta'];
+const PROFILE_COLORS=[0x48a9df,0xefb55e,0x8ecb9c,0xb49be8,0xe78379,0x7acbc9];
+const GRADE=[['diag','Diagnóstico da crise',20],['coop','Cooperação',15],['hum','Gestão de pessoas',20],['viab','Viabilidade financeira',20],['exec','Execução da solução',15],['risk','Gestão das consequências',10]];
+// Intervenções contextualizadas às seis cartas: são medidas implantadas, não respostas de questionário.
+// Cada caso é uma operação gerencial parametrizável, não uma alternativa de questionário.
+// Valores em R$ e % são dados das cartas; o impacto em pontos é uma simplificação didática.
+const POLICIES={
+ c1:{label:'Reajuste proposto por Pleno',unit:'R$/mês',min:0,max:1000,step:100,initial:400,target:400,
+  action:'Reorganizar as faixas salariais e negociar a volta ao treinamento.',
+  methods:['Mesa de negociação com Plenos','Auditoria de equidade e plano de cargos','Comunicado unilateral da direção'],
+  check:'Documentar critérios e comunicar o acordo aos funcionários',warning:'A diferença atual é R$ 300 por pessoa, mas a ação também deve preservar a carreira e o caixa.',scale:25},
+ c2:{label:'Diferencial adicional da supervisão',unit:'%',min:0,max:24,step:2,initial:12,target:12,
+  action:'Restabelecer lideranças, negociar responsabilidades e reorganizar a escala.',
+  methods:['Negociar com representantes de supervisão','Criar trilha de liderança com critérios','Impor a escala sem negociação'],
+  check:'Publicar matriz de responsabilidade e reativar turnos',warning:'O reajuste sindical de 12% igualou Operadores I e supervisores.',scale:22},
+ c3:{label:'Contraproposta salarial seletiva',unit:'%',min:0,max:45,step:5,initial:20,target:25,
+  action:'Reter conhecimento crítico e distribuir o trabalho até recompor o quadro.',
+  methods:['Negociar retenção dos especialistas críticos','Implantar bônus de permanência e sucessão','Reajustar indiscriminadamente os cargos'],
+  check:'Criar plano de transferência de conhecimento e cobertura dos projetos',warning:'Concorrente oferece 40% a mais; três analistas seniores já deixaram a empresa.',scale:29},
+ c4:{label:'Verba mensal de reenquadramento',unit:'R$/mês',min:0,max:1500,step:100,initial:900,target:900,
+  action:'Comparar cargos por autonomia, complexidade e impacto antes de corrigir a faixa.',
+  methods:['Auditoria por fatores e parecer do RH','Comitê entre Qualidade e Administração','Igualar cargos sem investigar atribuições'],
+  check:'Atualizar as descrições e registrar o parecer final',warning:'Teto de R$ 1.500/mês sem encargos; Qualidade R$ 4.600 e Administração R$ 5.400.',scale:18},
+ c5:{label:'Margem mínima nas próximas metas',unit:'%',min:0,max:30,step:2,initial:14,target:16,
+  action:'Redesenhar o incentivo para novos períodos, ligando vendas a margem.',
+  methods:['Negociar fórmula de bônus com os vendedores','Testar piloto com Finanças e Comercial','Cancelar o bônus atual sem acordo'],
+  check:'Preservar integralmente direitos dos ciclos já concluídos',warning:'5% do faturamento gera bônus de R$ 5 mil sobre venda com margem bruta de R$ 4 mil.',scale:12},
+ c6:{label:'Limite de investimento em ajustes',unit:'R$/mês',min:0,max:4500,step:300,initial:2400,target:2700,
+  action:'Reavaliar a promoção e criar progressão com critérios transparentes.',
+  methods:['Suspender promoção e conduzir avaliação imparcial','Criar comissão de carreira com critérios públicos','Manter promoção por indicação sem auditoria'],
+  check:'Documentar competências e permitir revisão pelos interessados',warning:'Promoção de assistente a supervisor custa R$ 3 mil/mês; teto de ajustes R$ 4.500/mês.',scale:23}
+};
+function policySummary(id,p){const c=POLICIES[id];if(!c||!p)return 'Sem plano';return c.methods[p.method]+' · '+c.label+': '+p.value+' '+c.unit+(p.protect?' · compromisso formal':'');}
+function policyEffects(cardId,p,stage,team){
+ const c=POLICIES[cardId];if(!c||!p)return null;
+ const amount=Math.max(c.min,Math.min(c.max,Number(p.value)||0)),ratio=(amount-c.min)/Math.max(1,c.max-c.min);
+ const appropriateness=Math.max(0,1-Math.abs(amount-c.target)/Math.max(1,c.max-c.min)*1.8);
+ const approach=Math.max(0,Math.min(2,Math.floor(Number(p.method)||0))),formal=Boolean(p.protect);
+ // Impactos visíveis e previsíveis, porém sem resultado acadêmico automático.
+ let price=20+Math.ceil(c.scale*ratio)+(approach===1?6:approach===0?4:0)+(formal?3:0);
+ let trust=Math.round(4+appropriateness*20-(approach===2?19:0)+(formal?7:0)-stage*5);
+ let prod=Math.round(5+appropriateness*18+(approach===0?3:approach===1?1:-5)-stage*7);
+ let rep=Math.round(2+appropriateness*16-(approach===2?15:0)+(formal?8:0)-stage*4);
+ // Contexto real de cada carta altera a simulação.
+ if(cardId==='c1'&&amount<300){trust-=18;prod-=8;}
+ if(cardId==='c2'&&amount<6){trust-=10;prod-=14;}
+ if(cardId==='c3'&&amount<15){prod-=14;trust-=9;}
+ if(cardId==='c4'&&approach===2){trust-=14;rep-=10;}
+ if(cardId==='c5'&&!formal){trust-=18;rep-=22;}
+ if(cardId==='c5'&&amount<8){prod-=8;rep-=7;}
+ if(cardId==='c5'&&amount>24){prod-=10;}
+ if(cardId==='c6'&&approach===2){trust-=18;rep-=15;}
+ if(cardId==='c6'&&amount>3000&&approach===2){price+=8;}
+ const nt=clamp(team.trust+trust),np=clamp(team.prod+prod),nr=clamp(team.rep+rep);
+ const quality=trust+prod+rep;
+ const outcome=quality>=36&&nt>=54&&np>=52?'estabilizada':quality>=6&&nt>=31&&np>=30?'parcial':'colapso';
+ return {cost:price,trust,prod,rep,quality,outcome,stats:{trust:nt,prod:np,rep:nr},approach,formal};
+}
+
+const CONSULTANTS={
+ c1:[{name:'Carlos · Equidade Interna',dept:'RH',advice:'Compare responsabilidades e senioridade: Plenos R$ 5.200 treinam Juniores que recebem R$ 5.500. O acordo precisa de critérios escritos.'},{name:'Guilherme · Controller',dept:'FIN',advice:'Projete o custo recorrente de cada reajuste. Um aumento sem análise de caixa pode criar outra crise.'}],
+ c2:[{name:'Luiza · Trilha de Carreira',dept:'RH',advice:'Diferencie supervisão e operação por autonomia e responsabilidade; o reajuste de 12% comprimiu as faixas.'},{name:'Ana Jully · Consultora Legal',dept:'DIR',advice:'Preserve os direitos do acordo sindical e documente alterações nas funções e critérios de progressão.'}],
+ c3:[{name:'Anna · Pesquisa de Mercado',dept:'DIR',advice:'Concorrentes pagam até 40% a mais; retenção seletiva pode ser mais sustentável que um aumento geral.'},{name:'Guilherme · Controller',dept:'FIN',advice:'Compare custos de reposição, formação e retenção. Três analistas de riscos seniores já saíram.'}],
+ c4:[{name:'Carlos · Equidade Interna',dept:'RH',advice:'Avalie cargos por complexidade, autonomia e impacto: Qualidade pode bloquear lotes, Administração depende de aprovação gerencial.'},{name:'Luiza · Trilha de Carreira',dept:'RH',advice:'Revise descrições e faixas respeitando o teto de R$ 1.500 mensais para correção, sem encargos.'}],
+ c5:[{name:'Guilherme · Controller',dept:'FIN',advice:'Venda de R$ 100 mil gerou margem bruta de R$ 4 mil e bônus de R$ 5 mil. Remuneração futura precisa considerar margem.'},{name:'Anna · Pesquisa de Mercado',dept:'DIR',advice:'Teste metas futuras com os vendedores e preserve valores já devidos em ciclos encerrados.'}],
+ c6:[{name:'Luiza · Trilha de Carreira',dept:'RH',advice:'Promoção de assistente a supervisor exige competências, experiência, responsabilidades e critérios comunicados.'},{name:'Guilherme · Controller',dept:'FIN',advice:'Promoção custa R$ 3.000 mensais; o limite para ajustes é R$ 4.500. Faça a projeção antes da decisão.'}]
+};
+const esc=s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
+const clamp=(n,min=0,max=100)=>Math.max(min,Math.min(max,n));
+const signed=n=>(n>=0?'+':'')+n;
+let firebaseTimeOffset=0;
+const now=()=>Date.now()+(onlineMode?firebaseTimeOffset:0);
+const ttl=(t)=>{const sec=Math.max(0,Math.ceil(t));return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');};
+const sessStore=(()=>{try{sessionStorage.setItem('_nexus_probe','ok');sessionStorage.removeItem('_nexus_probe');return sessionStorage;}catch(e){const m={};return {getItem:k=>m[k]||null,setItem:(k,v)=>m[k]=v,removeItem:k=>delete m[k]};}})();
+const localStore=(()=>{try{localStorage.setItem('_nexus_probe','ok');localStorage.removeItem('_nexus_probe');return localStorage;}catch(e){const m={};return {getItem:k=>m[k]||null,setItem:(k,v)=>m[k]=v,removeItem:k=>delete m[k]};}})();
+const myId='p'+(globalThis.crypto?.randomUUID?.()||Math.random().toString(36).slice(2)+Date.now().toString(36)); // Novo ID por aba; evita colisão ao duplicar abas.
+const teamTemplate=()=>({budget:100,reserve:false,trust:75,prod:85,rep:80,score:0,rounds:{}});
+function shuffledCards(){const ids=CRISES.map(c=>c.id);for(let i=ids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]];}return ids;}
+function initialGame(room){return {version:4,revision:1,room,maxRounds:3,teamCount:6,duration:480,deck:null,round:0,status:'waiting',startedAt:0,teams:Array.from({length:6},teamTemplate),assignments:{},message:'',completed:false};}
+let onlineMode=false,onlineReady=false,onlineBusy=false,fbApp=null,fbAuth=null,fbDb=null,fbRoom=null,fbRoomPath='',onlineUnsubs=[],onlinePublic=null,onlineView=null,onlinePending=new Set(),onlinePresenceUnsub=null,masterProcessing=Promise.resolve(),lastProjectedRevision=-1;
+let identity=null,game=null,channel=null,roomKey='',meetingUnlocked=false,masterWatching=0,peers=new Map(),avatars=new Map(),lastPose=0,lastUiUpdate=0,lastRoundSeen=0,lastStageSeen=0,lastNearKey='',activePanel='overview';
+function roomName(){return String($('roomCode')?.value||'NEXUS01').toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,18)||'NEXUS01';}
+function storageKey(room){return 'nexus_rh_v4_local_'+room;}
+function loadGame(room){try{const data=JSON.parse(localStore.getItem(storageKey(room))||'null');return data&&data.version===4?data:initialGame(room);}catch(e){return initialGame(room);}}
+function send(msg){try{channel?.postMessage({...msg,src:myId,room:identity?.room});}catch(e){}}
+function saveGame(next){
+ if(!identity||onlineMode)return;
+ const incoming=loadGame(identity.room);
+ next.revision=Math.max(incoming.revision||0,game?.revision||0)+1;
+ next.author=myId;game=next;
+ try{localStore.setItem(roomKey,JSON.stringify(next));}catch(e){showNote('Armazenamento local indisponível: exporte o registro do Mestre.');}
+ send({type:'game',game:next});refreshWorld();renderPanelIfOpen();
+}
+let mutationQueue=Promise.resolve();
+function mutate(fn){
+ if(onlineMode)return onlineMasterMutate(fn);
+ if(!identity)return Promise.resolve(false);
+ const room=identity.room;
+ const task=async()=>{
+  if(!identity||identity.room!==room)return false;
+  const execute=()=>{const snap=loadGame(room);if((game?.revision||0)>(snap.revision||0))Object.assign(snap,JSON.parse(JSON.stringify(game)));
+   const ok=fn(snap);if(ok===false)return false;saveGame(snap);return true;};
+  // Locks evita sobrescrita de votos/evidências feitos em abas ao mesmo tempo, em contextos seguros.
+  if(navigator.locks?.request){try{return await navigator.locks.request('nexus-v4-'+room,{mode:'exclusive'},execute);}catch(err){console.warn('Lock local indisponível',err);}}
+  return execute();
+ };
+ const result=mutationQueue.then(task,task);
+ mutationQueue=result.then(()=>{},()=>{});
+ return result;
+}
+
+function receiveGame(g){if(!g||g.room!==identity?.room)return;if((g.revision||0)<(game?.revision||0))return;if(g.revision===(game?.revision||0)&&g.author===game?.author)return;game=g;refreshWorld();renderPanelIfOpen();}
+function myTeam(){return identity?.role==='team'?identity.team:masterWatching;}
+function currentTeam(){return game?.teams?.[myTeam()]||null;}
+function currentRun(){return currentTeam()?.rounds?.[String(game?.round)]||null;}
+function roundActive(){return game?.status==='active'&&timeLeft()>0;}
+function timeLeft(){if(!game?.round)return 0;if(game.status!=='active')return 0;return Math.max(0,(game.duration*1000-(now()-game.startedAt))/1000);}
+function escalationStage(){const run=currentRun();if(!game?.round||!run)return 0;if(run.implementation)return run.implementation.stage;
+ if(game.status==='waiting')return 0;const ratio=1-clamp(timeLeft()/Math.max(1,game.duration),0,1);return ratio<.33?1:ratio<.68?2:3;}
+function playerCount(team){let count=identity?.role==='team'&&identity.team===team?1:0;for(const p of peers.values())if(p.team===team&&now()-p.last<7000&&p.role==='team')count++;return count;}
+function getCard(id){return CRISES.find(c=>c.id===id);}
+function teamLabel(index){return 'Equipe '+(TEAM_NAMES[index]||String(index+1));}
+function logEvent(team,run,what){run.events??=[];run.events.push({at:now(),by:identity?.name||'Mestre',what});if(run.events.length>45)run.events.shift();}
+function showNote(text){inform(text,3300);}
+function showBanner(text,ms=4200){const el=$('liveBanner');el.textContent=text;el.hidden=false;clearTimeout(window._nexusBanner);window._nexusBanner=setTimeout(()=>el.hidden=true,ms);}
+function logout(){if(onlineMode){logoutOnline();return;}if(ownAvatar){scene.remove(ownAvatar.g);ownAvatar=null;}thirdPerson=false;identity=null;game=null;peers.clear();for(const a of avatars.values())scene.remove(a.g);avatars.clear();channel?.close?.();channel=null;
+ $('liveOverlay').classList.add('liveShow');$('livePanel').hidden=true;$('incidentStrip').hidden=true;disposeIncident();resetInputs();paused=true;
+ $('joinInfo').textContent='NEXUS conectado somente ao novo Firebase. Login exigido para competir online.';}
+function enterGame(role){const name=String($('playerName').value||'').trim().slice(0,24),room=roomName(),team=Number($('teamPick').value)||0,color=Number($('avatarPick').value)||0;
+ if(!name){$('joinInfo').textContent='Digite um nome para seu personagem.';return;}
+ if(role==='team'&&(team<0||team>5)){showNote('Equipe inválida.');return;}
+ identity={id:myId,room,name,role,team,color};roomKey=storageKey(room);game=loadGame(room);if(team>=game.teamCount&&role==='team'){
+ $('joinInfo').textContent='Esta equipe ainda não está ativada pelo Mestre. Selecione uma equipe disponível.';identity=null;return;}
+ masterWatching=0;peers.clear();try{channel=new BroadcastChannel('nexus_coop_'+room);channel.onmessage=e=>handleMessage(e.data);}catch(e){channel=null;}
+ $('liveOverlay').classList.remove('liveShow');paused=false;meetingUnlocked=false;lastRoundSeen=game.round;
+ refreshWorld();openPanel();showBanner(role==='master'?'CENTRAL DO MESTRE — MODO LOCAL':'BEM-VINDO, '+name+' · '+teamLabel(team));
+ send({type:'join',name,team,color,role,x:px,z:pz,yaw});}
+function handleMessage(m){if(onlineMode||!identity||!m||m.src===myId||m.room!==identity.room)return;
+ if(m.type==='game')receiveGame(m.game);
+ if(m.type==='join'||m.type==='pose'){const peer={name:m.name,team:m.team,role:m.role,color:m.color,x:Number(m.x)||0,z:Number(m.z)||0,yaw:Number(m.yaw)||0,jump:Math.max(0,Number(m.jump)||0),last:now()};peers.set(m.src,peer);if(m.type==='join')send({type:'pose',name:identity.name,team:identity.team,color:identity.color,role:identity.role,x:px,z:pz,yaw,jump:Math.max(0,py-eyeHeight)});}
+ if(m.type==='bye'){peers.delete(m.src);const a=avatars.get(m.src);if(a){scene.remove(a.g);avatars.delete(m.src);}}
+}
+window.addEventListener('storage',e=>{if(!onlineMode&&identity&&e.key===roomKey&&e.newValue){try{receiveGame(JSON.parse(e.newValue));}catch(err){}}});
+function selectedPlanFor(run){return run?.proposal?run.proposal:null;}
+
+function hasInvestigated(){return Object.keys(currentRun()?.evidence||{}).length>=2;}
+function taskMarkerHint(){if(!identity||!game?.round)return null;const run=currentRun();if(!run||run.implementation)return null;
+ const todo=taskLocations(run.cardId).find(x=>!run.evidence[x.id]);if(todo)return todo.building;
+ if(!run.proposal?.approved)return buildings.find(b=>b.id==='DIR');
+ return buildings.find(b=>b.id===SCENARIOS[run.cardId].focus);
+}
+function refreshWorld(){if(!identity||!game)return;const run=currentRun();if(!run?.cardId){disposeIncident();$('incidentStrip').hidden=true;$('incidentNear').hidden=true;alarm=false;target=null;updateHud();return;}
+ if(activeIncidentKey!==run.cardId){disposeIncident();createIncident(run.cardId);meetingUnlocked=false;}
+ const card=getCard(run.cardId),done=Object.keys(run.evidence||{}).length,implemented=run.implementation;
+ $('incidentStrip').hidden=false;
+ $('incidentStrip').innerHTML=`<b>${implemented?(implemented.outcome==='estabilizada'?'✅ ESTABILIZADA':'⚠️ INTERVENÇÃO REALIZADA'):'🚨 CRISE ATIVA'}</b> · ${esc(SCENARIOS[run.cardId].name)}<div>${done}/3 evidências · ${implemented?'aguardando avaliação':'reunião e implementação em campo'}</div>`;
+ target=taskMarkerHint();alarm=roundActive()&&!implemented;
+ updateHud();}
+function updateHud(){if(!identity||!game)return;
+ const team=currentTeam(),run=currentRun();$('liveRole').textContent=identity.role==='master'?'MESTRE · OBSERVANDO '+teamLabel(masterWatching).toUpperCase():teamLabel(identity.team).toUpperCase()+' · '+identity.name;
+ $('liveRound').textContent=game.round?`RODADA ${game.round}/${game.maxRounds}`:'AGUARDANDO INÍCIO';
+ $('liveBudget').textContent=team?`◈ ${team.budget} · Confiança ${team.trust}%`:'—';
+ $('liveClock').textContent=game.status==='active'?ttl(timeLeft()):game.status==='closed'?'ENCERRADO':'--:--';}
+function planReference(){return identity?.role==='team'&&roundActive()&&currentRun()&&!currentRun().implementation;}
+function nearestAction(){if(!planReference())return null;const run=currentRun();let actions=[];
+ if(!run.implementation){for(const c of taskLocations(run.cardId))if(!run.evidence[c.id])actions.push({type:'clue',p:c,label:c.action,d:Math.hypot(px-c.x,pz-c.z)});
+  const mb=buildings.find(b=>b.id==='DIR');actions.push({type:'meeting',label:'Entrar na reunião de decisão',d:Math.hypot(px-mb.x,pz-(mb.entryZ+mb.side*2.5))});
+  if(run.proposal?.approved){const b=buildings.find(b=>b.id===SCENARIOS[run.cardId].focus);actions.push({type:'deploy',label:'Implantar o plano no setor',d:Math.hypot(px-(b.x+4.5),pz-(b.entryZ+b.side*2.5))});}}
+ actions.sort((a,b)=>a.d-b.d);return actions[0]||null;}
+window.nexusInteract=()=>{if(!identity){$('liveOverlay').classList.add('liveShow');return;}
+ if(identity.role==='master'){openPanel();return;}
+ const item=nearestAction();if(item&&item.d<=5.1){if(item.type==='clue'){openClue(item.p);return;}
+ if(item.type==='meeting'){meetingUnlocked=true;openPanel();activePanel='meeting';renderPanel();showNote('Sala de decisão acessada. Prepare uma proposta com a equipe.');return;}
+ if(item.type==='deploy'){deployPlan();return;}}
+ if(item&&item.d>5.1){target=item.type==='clue'?item.p.building:item.type==='meeting'?buildings.find(b=>b.id==='DIR'):buildings.find(b=>b.id===SCENARIOS[currentRun().cardId].focus);showNote('Aproxime-se do marcador destacado no campus.');return;}
+ openPanel();};
+function openClue(clue){activeClue=clue;paused=true;resetInputs();$('incidentDialogTitle').textContent=clue.title;$('incidentDialogText').textContent=clue.speech;
+ $('incidentDialogFacts').textContent=clue.facts;$('incidentDialog').hidden=false;document.exitPointerLock?.();}
+function closeClue(){$('incidentDialog').hidden=true;activeClue=null;paused=false;}
+$('incidentCancel').onclick=closeClue;
+$('incidentCollect').onclick=async()=>{
+ if(!activeClue||!roundActive()||identity?.role!=='team')return;
+ const clue=activeClue;
+ if(onlineMode){const queued=await onlineSendAction('evidence',{index:clue.i});closeClue();if(queued)showNote('Evidência enviada. Aguardando validação do Mestre.');return;}
+ const ok=await mutate(g=>{const run=g.teams[identity.team]?.rounds[String(g.round)];if(!run||run.implementation||run.evidence[clue.id])return false;
+  run.evidence[clue.id]={by:identity.name,at:now(),title:clue.title,facts:clue.facts};logEvent(identity.team,run,'Investigou: '+clue.title);return true;});
+ closeClue();if(ok)showBanner('📁 EVIDÊNCIA COMPARTILHADA: '+clue.title);
+};
+
+function proposalVotes(proposal){return Object.values(proposal?.votes||{}).filter(v=>v==='yes').length;}
+async function consultAdvisor(index){
+ if(identity?.role!=='team'||!roundActive())return;
+ const r=currentRun(),advisor=CONSULTANTS[r?.cardId]?.[index];if(!advisor||r.implementation)return;
+ const b=buildings.find(b=>b.id===advisor.dept);
+ if(Math.hypot(px-b.x,pz-(b.entryZ+b.side*2.5))>8){showNote('Visite o departamento do consultor para conversar.');return;}
+ if(onlineMode){await onlineSendAction('consult',{index});return;}
+ const ok=await mutate(g=>{const t=g.teams[identity.team],run=t.rounds[String(g.round)];
+  if(run.implementation||run.consultations?.[index]||t.budget<5)return false;
+  run.consultations??={};t.budget-=5;run.consultations[index]={at:now(),by:identity.name,advice:advisor.advice};
+  logEvent(identity.team,run,'Consultou '+advisor.name+' (-5 pontos)');return true;});
+ if(ok){showBanner('📋 PARECER REGISTRADO: '+advisor.name);renderPanelIfOpen();}
+ else showNote('Consulta indisponível ou saldo insuficiente.');
+}
+
+async function proposePolicy(){
+ if(identity?.role!=='team'||!roundActive()||!meetingUnlocked)return;
+ if(!hasInvestigated()){showNote('A equipe precisa registrar pelo menos duas evidências.');return;}
+ const run=currentRun(),cfg=POLICIES[run?.cardId];if(!cfg||run?.implementation)return;
+ const raw=Number($('policyValue')?.value),value=Math.min(cfg.max,Math.max(cfg.min,Number.isFinite(raw)?raw:cfg.initial));
+ const method=Number($('policyMethod')?.value)||0,protect=Boolean($('policyProtect')?.checked);
+ const note=String($('policyNote')?.value||'').trim().slice(0,240);
+ if(!note){showNote('Registre uma justificativa curta do plano, com base nas evidências.');return;}
+ if(onlineMode){await onlineSendAction('propose',{value,method,protect,note});return;}
+ const need=Math.max(1,Math.floor(playerCount(identity.team)/2)+1);
+ const proposal={value,method,protect,note,author:identity.name,by:myId,votes:{[myId]:'yes'},need,at:now(),approved:need===1};
+ const ok=await mutate(g=>{const r=g.teams[identity.team].rounds[String(g.round)];if(r?.implementation||r?.proposal)return false;
+  r.proposal=proposal;logEvent(identity.team,r,'Propôs: '+policySummary(r.cardId,proposal));return true;});
+ if(ok)showBanner(proposal.approved?'✅ PLANO APROVADO — A EQUIPE PODE IMPLEMENTAR':'🗳 PROPOSTA ENVIADA À EQUIPE');
+}
+async function votePlan(yes){
+ if(identity?.role!=='team'||!roundActive())return;
+ if(onlineMode){await onlineSendAction('vote',{yes:Boolean(yes)});return;}
+ const ok=await mutate(g=>{const r=g.teams[identity.team].rounds[String(g.round)],p=r?.proposal;
+  if(!p||p.approved||r.implementation||p.votes[myId])return false;
+  p.votes[myId]=yes?'yes':'no';p.approved=proposalVotes(p)>=p.need;
+  logEvent(identity.team,r,(yes?'Aprovou':'Rejeitou')+' a proposta.');return true;});
+ if(ok&&currentRun()?.proposal?.approved)showBanner('✅ APROVADO — VÁ AO SETOR PARA IMPLANTAR');
+}
+async function deployPlan(){
+ if(identity?.role!=='team'||!roundActive())return;
+ const run=currentRun();if(!run?.proposal?.approved||run.implementation)return;
+ if(onlineMode){await onlineSendAction('deploy',{});return;}
+ const ok=await mutate(g=>{
+  const t=g.teams[identity.team],r=t.rounds[String(g.round)];if(!r?.proposal?.approved||r.implementation)return false;
+  const stage=escalationStage(),result=policyEffects(r.cardId,r.proposal,stage,t);
+  if(!result)return false;
+  let funds=t.budget,emergency=false;
+  if(funds<result.cost&&!t.reserve&&Math.min(120,funds+20)>=result.cost){funds=Math.min(120,funds+20);t.reserve=true;emergency=true;}
+  if(funds<result.cost){
+   t.budget=clamp(funds-20,0,120);t.trust=clamp(t.trust-19);t.prod=clamp(t.prod-25);t.rep=clamp(t.rep-14);
+   r.implementation={policy:r.proposal,outcome:'colapso',cost:Math.min(funds,20),stage,when:now(),by:identity.name,note:'Orçamento insuficiente: medida não implantada',emergency:false};
+   logEvent(identity.team,r,'Tentativa inviável. Sem recursos para implementar a decisão.');return true;
+  }
+  t.budget=clamp(funds-result.cost,0,120);
+  t.trust=result.stats.trust;t.prod=result.stats.prod;t.rep=result.stats.rep;
+  const outcome=result.outcome;
+  r.implementation={policy:r.proposal,outcome,cost:result.cost,stage,when:now(),by:identity.name,emergency,stats:result.stats};
+  logEvent(identity.team,r,'Implantou: '+policySummary(r.cardId,r.proposal)+' · '+outcome+' · custo '+result.cost+'.');return true;
+ });
+ if(ok){const rr=currentRun();showBanner(rr?.implementation?.outcome==='estabilizada'?'✅ EMPRESA EM RECUPERAÇÃO':rr?.implementation?.outcome==='parcial'?'🟠 CRISE PARCIALMENTE CONTIDA':'🚨 A CRISE CAUSOU PREJUÍZOS',6000);openPanel();}
+}
+
+async function masterStart(){if(identity?.role!=='master')return;await mutate(g=>{if(g.completed||g.round>=g.maxRounds){alert('Limite de rodadas alcançado. Encerre ou reinicie.');return false;}
+ if(g.round&&g.status==='active'){alert('Encerre a rodada anterior no painel do Mestre antes de prosseguir.');return false;}
+ if(g.round&&g.teams.slice(0,g.teamCount).some(t=>!t.rounds[String(g.round)]?.evaluation)&&!confirm('Há equipes sem avaliação. Avançar mesmo assim?'))return false;
+ if(g.round)finalizeUnresolved(g);
+ g.round++;g.status='active';g.startedAt=now();g.assignments={};if(!Array.isArray(g.deck)||g.deck.length!==CRISES.length)g.deck=shuffledCards();
+ for(let i=0;i<g.teamCount;i++){const id=g.deck[(i+g.round-1)%g.deck.length];g.assignments[i]=id;
+   g.teams[i].rounds[String(g.round)]={cardId:id,evidence:{},consultations:{},proposal:null,implementation:null,evaluation:null,events:[{at:now(),by:'Sistema',what:'Crise distribuída: '+getCard(id).titulo}]};}
+ return true;});
+ if(game?.status==='active')showBanner('🚨 RODADA '+game.round+' DE '+game.maxRounds+' — CRISES INICIADAS');}
+function finalizeUnresolved(g){if(!g.round)return;for(let i=0;i<g.teamCount;i++){
+  const t=g.teams[i],r=t.rounds[String(g.round)];if(!r||r.implementation)continue;
+  // Sem intervenção também há resultado, orçamento operacional consumido e efeitos duradouros.
+  t.budget=clamp(t.budget-20,0,120);t.trust=clamp(t.trust-18);t.prod=clamp(t.prod-24);t.rep=clamp(t.rep-13);
+  r.implementation={planIndex:null,outcome:'colapso',cost:20,stage:3,when:now(),by:'Sistema',note:'Tempo encerrado sem intervenção',emergency:false};
+  logEvent(i,r,'Crise não resolvida: a empresa sofreu paralisação e perda operacional (-20).');
+ }}
+async function masterStop(){if(identity?.role!=='master')return;await mutate(g=>{if(g.status!=='active')return false;finalizeUnresolved(g);g.status='closed';return true;});if(game?.status==='closed')showBanner('⏱ TEMPO ENCERRADO — CRISES SEM SOLUÇÃO AGRAVADAS');}
+async function masterEnd(){if(identity?.role!=='master')return;if(!confirm('Encerrar a competição e publicar a classificação?'))return;await mutate(g=>{if(g.completed)return false;finalizeUnresolved(g);g.status='closed';g.completed=true;return true;});showBanner('🏆 COMPETIÇÃO ENCERRADA');}
+async function masterSettings(){if(identity?.role!=='master'||game.round)return;const total=Number($('masterTeams')?.value)||4,rounds=Number($('masterRounds')?.value)||3,duration=Number($('masterDuration')?.value)||8;
+ await mutate(g=>{g.teamCount=clamp(total,1,6);g.maxRounds=clamp(rounds,1,6);g.duration=clamp(duration,2,20)*60;});showNote('Configurações salvas.');}
+async function masterMessage(){const value=String($('masterMessage')?.value||'').trim();if(!value)return;await mutate(g=>{g.message=value.slice(0,160)});showBanner('📣 COMUNICADO PUBLICADO');}
+async function publishGrade(index){if(identity?.role!=='master'||!game.round)return;let total=0,notes={};for(const [id,label,max] of GRADE){const input=$('grade_'+index+'_'+id);if(!input){alert('Abra a avaliação da equipe antes.');return;}
+  const n=Number(input.value);if(!Number.isInteger(n)||n<0||n>max){alert('Nota inválida em '+label+' (0 a '+max+').');return;}notes[id]=n;total+=n;}
+ const comment=String($('masterComment'+index)?.value||'').trim().slice(0,500);
+ await mutate(g=>{const t=g.teams[index],r=t.rounds[String(g.round)];if(!r||r.evaluation)return false;
+ r.evaluation={score:total,notes,comment,by:identity.name,at:now()};t.score+=total;logEvent(index,r,'Mestre avaliou as ações: '+total+'/100.');});showBanner('AVALIAÇÃO PUBLICADA — '+teamLabel(index));}
+async function resetGame(){if(identity?.role!=='master')return;if(!confirm('Reiniciar todas as equipes e rodadas desta sala? Todas as ações anteriores serão descartadas.'))return;
+ await mutate(g=>{const fresh=initialGame(identity.room);fresh.teamCount=g.teamCount;fresh.maxRounds=g.maxRounds;fresh.duration=g.duration;fresh.epoch='ep'+Math.random().toString(36).slice(2);Object.assign(g,fresh);});if(onlineMode){try{await fbRoom.child('actions').remove();}catch(e){console.warn('Limpeza de fila',e);}}showBanner('Sala reiniciada');}
+function exportGame(){
+ if(identity?.role!=='master'||!game)return;
+ const data=JSON.stringify({format:onlineMode?'NEXUS-RH-v5-online':'NEXUS-RH-v4-local',exportedAt:new Date().toISOString(),game},null,2);
+ const blob=new Blob([data],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='NEXUS_'+identity.room+'_RODADA_'+game.round+'_REGISTRO.json';a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),2000);showNote('Registro local exportado.');
+}
+
+function showMission(){
+ const t=currentTeam(),r=currentRun();
+ if(!game.round||!r)return `<div class="liveBox"><h3>Campus em operação</h3><p>O Mestre ainda não iniciou a competição. Explore o campus e encontre seus colegas. Ações e crises começam quando a rodada for liberada.</p></div>`;
+ const card=getCard(r.cardId),sc=SCENARIOS[r.cardId],cfg=POLICIES[r.cardId],count=Object.keys(r.evidence||{}).length,imp=r.implementation,proposal=r.proposal;
+ const isExpired=!roundActive();
+ let h=`<div class="liveBox"><span class="livePill">RODADA ${game.round}/${game.maxRounds}</span><span class="livePill">${esc(card.setor)}</span><h2>${esc(card.titulo)}</h2><p class="liveCrit">${esc(card.ameaca)}</p><p>${esc(card.desc)}</p><small class="liveMuted">Vivencie o caso, investigue, negocie e implemente sua própria medida. Não há questões A–D.</small>${isExpired&&!imp?'<div class="persistentAlert">Tempo encerrado. O Mestre precisa concluir esta rodada para registrar as consequências.</div>':''}</div>`;
+ h+=`<div class="liveBox"><h3>1 · Investigar em campo (${count}/3)</h3>${taskLocations(r.cardId).map(x=>`<div class="incidentTodo"><span>${r.evidence[x.id]?'✅':'📍'} <strong>${esc(x.building.name)}</strong> — ${esc(x.action)}</span><span>${r.evidence[x.id]?'Coletado':'Pendente'}</span></div>`).join('')}`;
+ if(Object.keys(r.evidence).length)h+=`<details><summary>Ver ${count} evidência(s) compartilhada(s)</summary>${Object.values(r.evidence).map(x=>`<p class="liveSmall"><b>${esc(x.title)} · ${esc(x.by)}</b><span style="display:block">${esc(x.facts)}</span></p>`).join('')}</details>`;
+ h+='<p class="liveSmall">Cada integrante pode investigar outro departamento. As informações recolhidas ficam disponíveis para toda a equipe.</p></div>';
+ h+=`<div class="liveBox"><h3>Consultoria presencial (opcional · 5 pontos)</h3><p class="liveSmall">Visite o setor, aproxime-se da entrada e solicite parecer. Ele ficará registrado para a equipe.</p>${(CONSULTANTS[r.cardId]||[]).map((a,i)=>{const b=buildings.find(b=>b.id===a.dept),distance=Math.hypot(px-b.x,pz-(b.entryZ+b.side*2.5)),done=r.consultations?.[i];return `<div class="incidentTodo"><span><strong>${esc(a.name)}</strong> · ${esc(b.name)}${done?'<div class="liveSmall">'+esc(done.advice)+'</div>':''}</span>${done?'<span class="good">Consultado</span>':`<button data-consult="${i}" ${!roundActive()||imp||distance>8||t.budget<5?'disabled':''} style="width:auto;min-height:36px">${distance>8?'Visite o setor':'Consultar −5'}</button>`}</div>`;}).join('')}</div>`;
+ if(imp){
+  h+=`<div class="liveBox"><h3>${imp.outcome==='estabilizada'?'✅ Empresa em recuperação':imp.outcome==='parcial'?'🟠 Mitigação parcial':'🚨 Colapso operacional'}</h3><p><b>${imp.policy?esc(policySummary(r.cardId,imp.policy)):'Sem medida implementada'}</b></p><p>Executada por ${esc(imp.by||'Sistema')} · custo ${imp.cost||0} pontos ${imp.emergency?'· reserva emergencial utilizada':''}.</p><p>Confiança ${t.trust}% · Produtividade ${t.prod}% · Reputação ${t.rep}%</p><p>${r.evaluation?`Nota do Mestre: <b>${r.evaluation.score}/100</b> — ${esc(r.evaluation.comment||'Sem devolutiva')}`:'Aguardando avaliação manual do Mestre.'}</p></div>`;
+ }else{
+  h+=`<div class="liveBox"><h3>2 · Construir a intervenção</h3>`;
+  h+=count<2?'<p>Antes de propor medidas, recolha pelo menos duas evidências no campus.</p>':!meetingUnlocked?'<p>Para criar uma proposta, vá até a <b>Diretoria</b> e acione o marcador <b>Sala de Decisão</b>. Os colegas podem votar de qualquer lugar.</p>':'<p>Você entrou na Sala de Decisão. Ajuste os parâmetros do plano e apresente suas razões.</p>';
+  if(meetingUnlocked&&count>=2&&roundActive()&&!proposal){
+   h+=`<div class="liveBoxInner"><strong>${esc(cfg.action)}</strong><p class="liveSmall">${esc(cfg.warning)}</p>
+    <label for="policyValue">${esc(cfg.label)} (${esc(cfg.unit)})</label><div class="policyRange"><input type="range" id="policyValue" min="${cfg.min}" max="${cfg.max}" step="${cfg.step}" value="${cfg.initial}"><output id="policyOutput">${cfg.initial} ${esc(cfg.unit)}</output></div>
+    <label for="policyMethod">Procedimento de gestão</label><select id="policyMethod">${cfg.methods.map((m,i)=>`<option value="${i}">${esc(m)}</option>`).join('')}</select>
+    <label><input type="checkbox" id="policyProtect" checked style="width:18px;height:18px;min-height:auto;margin:0 8px 0 0;vertical-align:middle">${esc(cfg.check)}</label>
+    <label for="policyNote">Justifique a medida à sua equipe (obrigatório)</label><textarea id="policyNote" maxlength="240" placeholder="O que será feito e quais evidências justificam sua proposta?"></textarea>
+    <div class="policyPreview" id="policyForecast">Estimativa de recursos. A reação dos funcionários dependerá do momento em que a medida for implantada.</div>
+    <button class="liveAccent" id="sendPolicy">Apresentar proposta à equipe</button>
+    </div>`;
+  }
+  if(proposal){
+   const voteCount=proposalVotes(proposal),already=Object.hasOwn(proposal.votes||{},myId);
+   h+=`<div class="liveBoxInner"><strong>Proposta apresentada por ${esc(proposal.author)}</strong><p>${esc(policySummary(r.cardId,proposal))}</p><p class="liveSmall">Argumentos: ${esc(proposal.note||'Não informados')}</p><p><b>Aprovações: ${voteCount}/${proposal.need}</b> · ${proposal.approved?'proposta aprovada':'aguardando colegas'}</p>`;
+   if(!proposal.approved&&roundActive()&&!already)h+='<div class="liveGrid two"><button class="liveAccent" id="voteYes">Aprovar intervenção</button><button id="voteNo">Rejeitar intervenção</button></div>';
+   if(!proposal.approved&&already)h+='<p class="liveSmall">Seu voto foi registrado; acompanhe a votação dos demais jogadores.</p>';
+   if(!proposal.approved&&meetingUnlocked&&roundActive())h+='<button id="replaceProposal">Cancelar proposta e voltar à negociação</button>';
+   if(proposal.approved)h+='<p class="good">Proposta aprovada! Agora a equipe deve ir ao setor afetado e utilizar o marcador verde para implementar.</p>';
+   h+='</div>';
+  }
+  h+='</div>';
+  h+=`<div class="liveBox"><h3>3 · Executar no mundo</h3><p>${proposal?.approved?'Desloque-se ao departamento <b>'+esc(buildings.find(b=>b.id===sc.focus).name)+'</b> e pressione <b>USAR</b> no marcador IMPLEMENTAR PLANO.':'A execução só é liberada após investigação, negociação e aprovação.'}</p><p class="liveSmall">A situação progride com o tempo; a decisão muda o orçamento, a confiança, a produtividade, a reputação e o comportamento dos NPCs.</p></div>`;
+ }
+ if(game.message)h+=`<div class="liveBox"><strong>📣 Comunicado do Mestre</strong><p>${esc(game.message)}</p></div>`;
+ h+=`<div class="liveBox"><h3>Cooperação</h3><p>${playerCount(myTeam())} integrante(s) identificado(s) nesta equipe local.</p><p class="liveSmall">Use este mesmo endereço/origem em abas diferentes para testar avatares juntos. A conexão entre celulares será adicionada exclusivamente com seu novo Firebase.</p></div>`;
+ return h;
+}
+
+function masterDashboard(){let h=`<div class="liveBox"><h2>Central do Mestre · ${esc(identity.room)}</h2><p>Três rodadas por padrão. Avaliação de ações, decisões configuráveis e consequências, sem alternativas A–D.</p><div class="liveGrid three"><button id="startRound" class="liveAccent" ${game.completed||game.round>=game.maxRounds?'disabled':''}>Iniciar rodada</button><button id="stopTime">Encerrar tempo</button><button id="endGame">Encerrar competição</button></div>
+ <p>Rodada ${game.round}/${game.maxRounds} · ${game.status==='active'?'Em andamento':game.status==='closed'?'Encerrada':'Aguardando'}</p>
+ <div class="liveGrid three"><label>Equipes<select id="masterTeams" ${game.round?'disabled':''}>${[1,2,3,4,5,6].map(v=>`<option value="${v}" ${v===game.teamCount?'selected':''}>${v}</option>`).join('')}</select></label><label>Rodadas<select id="masterRounds" ${game.round?'disabled':''}>${[3,4,6].map(v=>`<option value="${v}" ${v===game.maxRounds?'selected':''}>${v}</option>`).join('')}</select></label><label>Tempo<select id="masterDuration" ${game.round?'disabled':''}>${[4,6,8,12,15].map(v=>`<option value="${v}" ${game.duration===v*60?'selected':''}>${v} min</option>`).join('')}</select></label></div><button id="saveSettings" ${game.round?'disabled':''}>Salvar configuração</button></div>`;
+ h+=`<div class="liveBox"><h3>Observação das empresas</h3><label>Empresa observada<select id="watchTeam">${TEAM_NAMES.slice(0,game.teamCount).map((name,i)=>`<option value="${i}" ${i===masterWatching?'selected':''}>Equipe ${name}</option>`).join('')}</select></label><p class="liveSmall">O mundo 3D mostra a crise da equipe escolhida. As outras empresas continuam independentes.</p></div>`;
+ h+=`<div class="liveBox"><h3>Comunicado</h3><textarea id="masterMessage" maxlength="160" placeholder="Comunicado do Mestre...">${esc(game.message||'')}</textarea><button id="postMessage">Enviar comunicado</button></div>`;
+ h+=`<div class="liveBox"><h3>Resultados das equipes</h3>${game.teams.slice(0,game.teamCount).map((t,i)=>{const r=t.rounds[String(game.round)],imp=r?.implementation;return `<div class="liveScore"><span><strong>${teamLabel(i)}</strong><small>${r?imp?' · '+imp.outcome:' · em investigação':' · aguardando'}</small></span><span>${t.budget} ◈ · ${t.score} pts</span></div>`;}).join('')}</div>`;
+ if(game.round)h+=`<div class="liveBox"><h3>Avaliar ações das equipes</h3><p class="liveSmall">Você avalia negociação, coerência e consequências reais. Total de 100 pontos.</p>${game.teams.slice(0,game.teamCount).map((t,i)=>{const r=t.rounds[String(game.round)];if(!r)return'';
+ const imp=r.implementation;if(r.evaluation)return `<details><summary>${teamLabel(i)} — ${r.evaluation.score}/100 (publicada)</summary><p>${esc(r.evaluation.comment)}</p></details>`;
+ return `<details><summary>${teamLabel(i)} · ${imp?'Plano implantado':'Sem implementação'} · abrir avaliação</summary><p><b>Crise:</b> ${esc(getCard(r.cardId).titulo)}</p><p><b>Evidências:</b> ${Object.keys(r.evidence).length}/3 · <b>Consultorias:</b> ${Object.keys(r.consultations||{}).length}</p><p><b>Plano:</b> ${esc(imp?.policy?policySummary(r.cardId,imp.policy):'Não implementado')}</p><p><b>Desfecho:</b> ${esc(imp?.outcome||'Pendente')}</p><p><b>Últimas ações:</b></p><ul class="eventList">${(r.events||[]).slice(-12).map(e=>`<li>${esc(e.by)}: ${esc(e.what)}</li>`).join('')}</ul><div class="liveGrid two">${GRADE.map(([key,title,max])=>`<label>${esc(title)} / ${max}<input id="grade_${i}_${key}" type="number" min="0" max="${max}" value="0" step="1"></label>`).join('')}</div><label>Devolutiva<textarea id="masterComment${i}" maxlength="500" placeholder="Justifique a nota e os impactos observados..."></textarea></label><button class="liveAccent" data-grade="${i}">Publicar avaliação</button></details>`;
+ }).join('<hr>')}</div>`;
+ if(game.completed||game.round>=game.maxRounds){const order=game.teams.slice(0,game.teamCount).map((t,i)=>({name:teamLabel(i),score:t.score})).sort((a,b)=>b.score-a.score);h+=`<div class="liveBox"><h3>🏆 Classificação</h3>${order.map((o,i)=>`<div class="liveScore">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)} ${esc(o.name)}<b>${o.score} pts</b></div>`).join('')}</div>`;}
+ h+=`<div class="liveBox"><button id="exportGame">↓ Exportar registro JSON da competição</button><button id="resetGame" class="liveDanger">Reiniciar competição</button><p class="liveSmall">${onlineMode?'ONLINE: mantenha a conta do Mestre aberta para processar ações e publicar estados das equipes.':'DEMONSTRAÇÃO LOCAL: resultados não sincronizados na internet.'}</p></div>`;return h;}
+function showOverview(){const t=currentTeam(),r=currentRun();return `<div class="liveBox"><h2>${identity.role==='master'?'Painel do Mestre':teamLabel(identity.team)+' · '+identity.name}</h2><div class="stats"><span>◈ Orçamento<br><b>${t.budget}</b></span><span>♡ Confiança<br><b>${t.trust}%</b></span><span>▣ Produtividade<br><b>${t.prod}%</b></span><span>✦ Reputação<br><b>${t.rep}%</b></span></div><p class="liveSmall">Indicadores persistem entre rodadas. O orçamento é consumido ao implementar soluções.</p></div>`;}
+function openPanel(){if(!identity){$('liveOverlay').classList.add('liveShow');return;}$('mapModal').classList.remove('show');$('menuModal').classList.remove('show');$('livePanel').hidden=false;paused=true;resetInputs();document.exitPointerLock?.();renderPanel();}
+function closePanel(){$('livePanel').hidden=true;paused=false;meetingUnlocked=false;}
+function renderPanelIfOpen(){if(!identity||$('livePanel').hidden)return;const a=document.activeElement;if(a&&$('livePanel').contains(a)&&['INPUT','TEXTAREA','SELECT'].includes(a.tagName))return;renderPanel();}
+function renderPanel(){if(!identity||!game)return;const b=$('livePanelBody');$('panelSubtitle').textContent=identity.role==='master'?'Central de Controle · '+(onlineMode?'ONLINE FIREBASE':'MODO LOCAL'):'Missão cooperativa · '+teamLabel(identity.team)+(onlineMode?' · ONLINE':' · LOCAL');
+ b.innerHTML=showOverview()+(identity.role==='master'?masterDashboard():showMission())+`<div class="liveBox"><button id="logoutGame">Trocar personagem / sair</button></div>`;
+ const click=(id,cb)=>{const el=$(id);if(el)el.onclick=cb;};click('logoutGame',()=>{if(!onlineMode)send({type:'bye'});logout();});
+ if(identity.role==='master'){click('startRound',masterStart);click('stopTime',masterStop);click('endGame',masterEnd);click('saveSettings',masterSettings);click('postMessage',masterMessage);click('resetGame',resetGame);click('exportGame',exportGame);
+  const sel=$('watchTeam');if(sel)sel.onchange=()=>{masterWatching=Number(sel.value);if(onlineMode)onlineWatchPresence(masterWatching);disposeIncident();refreshWorld();renderPanel();};
+  b.querySelectorAll('[data-grade]').forEach(el=>el.onclick=()=>publishGrade(Number(el.dataset.grade)));
+ }else{
+  click('sendPolicy',proposePolicy);click('voteYes',()=>votePlan(true));click('voteNo',()=>votePlan(false));b.querySelectorAll('[data-consult]').forEach(el=>el.onclick=()=>consultAdvisor(Number(el.dataset.consult)));
+  click('replaceProposal',async()=>{if(!confirm('Cancelar a proposta atual e retornar à negociação?'))return;
+   if(onlineMode){await onlineSendAction('cancel',{});return;}
+   await mutate(g=>{const r=g.teams[identity.team].rounds[String(g.round)];if(!r?.proposal||r.proposal.approved||r.implementation)return false;r.proposal=null;logEvent(identity.team,r,'Cancelou proposta e reabriu negociação.');return true;});});
+  const val=$('policyValue'),method=$('policyMethod'),protect=$('policyProtect');
+  if(val&&method&&protect){const upd=()=>{const cfg=POLICIES[currentRun()?.cardId],out=$('policyOutput'),forecast=$('policyForecast');
+   if(!cfg||!out||!forecast)return;const v=Number(val.value);out.textContent=v+' '+cfg.unit;
+   const ef=policyEffects(currentRun().cardId,{value:v,method:Number(method.value),protect:protect.checked},1,currentTeam());
+   forecast.textContent='Custo estimado: '+ef.cost+' pontos incluindo operação · efeitos aproximados: confiança '+signed(ef.trust)+', produtividade '+signed(ef.prod)+', reputação '+signed(ef.rep)+'. A crise pode evoluir antes de implantar.';};
+   val.oninput=upd;method.onchange=upd;protect.onchange=upd;upd();}
+ }
+}
+window.nexusOpenPanel=openPanel;
+$('closeLive').onclick=closePanel;
+$('terminalBtn').textContent='▣ ATIVIDADES';
+$('terminalBtn').onclick=openPanel;
+$('enterMaster').onclick=()=>{ $('localTeamLabel').hidden=false;enterGame('master');};$('enterTeam').onclick=()=>{ $('localTeamLabel').hidden=false;enterGame('team');};$('enterOnline').onclick=enterOnline;
+$('resumeGame').onclick=()=>{if(identity){$('liveOverlay').classList.remove('liveShow');paused=false;}else showNote('Entre no jogo primeiro.');};
+$('menuBtn').textContent='☰';
+const oldMenu=$('menuCard');oldMenu.insertAdjacentHTML('beforeend','<button id="viewToggle">◈ Alternar câmera (V)</button><button id="openMissionMenu">▣ Abrir atividades</button>');
+$('openMissionMenu').onclick=()=>{ $('menuModal').classList.remove('show');openPanel();};
+let thirdPerson=false,ownAvatar=null;
+function toggleView(){thirdPerson=!thirdPerson;showNote(thirdPerson?'Câmera externa ativada':'Câmera em primeira pessoa');}
+$('viewToggle').onclick=()=>{$('menuModal').classList.remove('show');paused=false;toggleView();};
+window.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='v'&&identity&&!paused){toggleView();}},false);
+function makeAvatar(name,color){const group=new THREE.Group(),coat=mat(PROFILE_COLORS[color%PROFILE_COLORS.length]),face=mat(0xdfb692),trousers=mat(0x3a435a);
+ const piece=(w,h,d,material,x,y,z)=>{const q=new THREE.Mesh(unit,material);q.scale.set(w,h,d);q.position.set(x,y,z);group.add(q);return q;};
+ piece(.75,.88,.4,coat,0,1.32,0);piece(.55,.54,.48,face,0,2.05,0);const l=piece(.23,.85,.28,trousers,-.22,.47,0),r=piece(.23,.85,.28,trousers,.22,.47,0);
+ const al=piece(.18,.8,.25,coat,-.5,1.3,0),ar=piece(.18,.8,.25,coat,.5,1.3,0);
+ const tag=labelSprite(name.toUpperCase().slice(0,14),PROFILE_COLORS[color%PROFILE_COLORS.length],3.15);tag.position.y=3.13;group.add(tag);scene.add(group);
+ return {g:group,al,ar,l,r,x:0,z:0};}
+function animateAvatars(t,dt){const visibleTeam=myTeam();if(!identity)return;
+ for(const [id,p] of peers){if(now()-p.last>9000){peers.delete(id);const a=avatars.get(id);if(a){scene.remove(a.g);avatars.delete(id);}continue;}
+ const visible=p.role==='team'&&p.team===visibleTeam;if(!visible){const a=avatars.get(id);if(a)a.g.visible=false;continue;}
+ let a=avatars.get(id);if(!a){a=makeAvatar(p.name,p.color);avatars.set(id,a);a.g.position.set(p.x,0,p.z);}
+ a.g.visible=true;const dx=p.x-a.g.position.x,dz=p.z-a.g.position.z,rate=Math.min(1,dt*11);a.g.position.x+=dx*rate;a.g.position.z+=dz*rate;a.g.position.y+=(p.jump-a.g.position.y)*rate;a.g.rotation.y=p.yaw;
+ const speed=Math.hypot(dx,dz)>0.08?1:0;const swing=Math.sin(t*.012+id.length)*speed*.55;a.l.rotation.x=swing;a.r.rotation.x=-swing;a.al.rotation.x=-swing;a.ar.rotation.x=swing;
+ }
+ if(identity.role==='team'&&thirdPerson){if(!ownAvatar){ownAvatar=makeAvatar(identity.name,identity.color);ownAvatar.g.name='local_player';}ownAvatar.g.visible=true;ownAvatar.g.position.set(px,Math.max(0,py-eyeHeight),pz);ownAvatar.g.rotation.y=yaw;
+ const swing=Math.sin(t*.01)*(Math.abs(joy.x)+Math.abs(joy.y)+Number(Boolean(keys.w||keys.a||keys.s||keys.d))>0?.5:0);
+ ownAvatar.l.rotation.x=swing;ownAvatar.r.rotation.x=-swing;ownAvatar.al.rotation.x=-swing;ownAvatar.ar.rotation.x=swing;
+ // Move the camera away from the avatar without touching the physics position.
+ let camD=3.4;for(let d=.6;d<=3.4;d+=.25){if(blocked(px+Math.sin(yaw)*d,pz+Math.cos(yaw)*d))break;camD=d;}camera.position.x=px+Math.sin(yaw)*camD;camera.position.z=pz+Math.cos(yaw)*camD;camera.position.y=3.25;
+ }else if(ownAvatar)ownAvatar.g.visible=false;
+}
+// State-to-visual updates and cross-tab presence (no internet requests).
+function heartbeat(){if(!identity||!game)return;
+ if(onlineMode){onlinePose();}else send({type:'pose',name:identity.name,team:identity.team,color:identity.color,role:identity.role,x:px,z:pz,yaw,jump:Math.max(0,py-eyeHeight)});
+ const r=currentRun();if(game.round!==lastRoundSeen){lastRoundSeen=game.round;meetingUnlocked=false;refreshWorld();if(game.round)showBanner('🚨 NOVA CRISE · '+getCard(r?.cardId)?.titulo);}
+ const stage=escalationStage();if(identity.role==='team'&&roundActive()&&stage>lastStageSeen&&stage>=2&&!r?.implementation){lastStageSeen=stage;showBanner(stage===2?'⚠️ CRISE EM ESCALADA — A EQUIPE PRECISA AGIR':'🚨 CRISE GRAVE — REDUÇÃO DA PRODUTIVIDADE');}
+ updateHud();if(!$('livePanel').hidden&&game.status==='closed')renderPanelIfOpen();
+}
+setInterval(heartbeat,420);
+// Mouse/teclado continuam permitidos ao mesmo tempo em que joystick, corrida e pulo no celular.
+// Evidências, planos, aprovação e implantação são persistidos como ações da empresa da equipe.
+
+// ─────────── MULTIPLAYER FIREBASE · Isolamento por time ───────────
+function onlineStatus(message){const el=$('onlineState');if(el)el.textContent=message;}
+function onlineError(error){
+ const code=error?.code||''; const hints={
+  'auth/invalid-credential':'E-mail ou senha inválidos. Confira sua conta no Firebase Authentication.',
+  'auth/invalid-email':'E-mail inválido.',
+  'auth/too-many-requests':'Muitas tentativas. Aguarde antes de tentar novamente.',
+  'auth/network-request-failed':'Falha na internet ou no acesso ao Firebase.',
+  'auth/unauthorized-domain':'Domínio não autorizado. Adicione o endereço do site em Authentication → Configurações → Domínios autorizados.',
+  'PERMISSION_DENIED':'Permissão negada. Publique o arquivo database.rules.json no Realtime Database.'};
+ return hints[code]||hints[code?.replace('database/','')]||('Firebase: '+(error?.message||code||'falha inesperada'));
+}
+function onlineSessionEmail(email){
+ const lower=String(email||'').toLowerCase();return lower===MASTER_EMAIL?{role:'master',team:0}:
+ firebaseTeam(lower)>=0?{role:'team',team:firebaseTeam(lower)}:null;
+}
+function onlineOff(){for(const unsub of onlineUnsubs.splice(0)){try{unsub();}catch(e){}}if(onlinePresenceUnsub){onlinePresenceUnsub();onlinePresenceUnsub=null;}if(fbRoom&&identity?.role==='team'){
+ try{fbRoom.child('presence').child(String(identity.team)).child(identity.uid).child(myId).remove().catch(()=>{});}catch(e){}
+ }onlinePending.clear();onlineReady=false;onlinePublic=null;onlineView=null;lastProjectedRevision=-1;}
+async function logoutOnline(){onlineOff();onlineMode=false;onlineBusy=false;
+ if(ownAvatar){scene.remove(ownAvatar.g);ownAvatar=null;}thirdPerson=false;identity=null;game=null;peers.clear();for(const a of avatars.values())scene.remove(a.g);avatars.clear();disposeIncident();resetInputs();paused=true;
+ $('liveOverlay').classList.add('liveShow');$('livePanel').hidden=true;$('incidentStrip').hidden=true;
+ try{await fbAuth?.signOut();}catch(e){}onlineStatus('Sessão encerrada. Entre novamente para voltar ao jogo.');}
+function ensureFirebase(){if(typeof firebase==='undefined'||!firebase?.initializeApp)throw new Error('Biblioteca Firebase não carregada. Verifique a conexão à internet.');
+ if(!fbApp){fbApp=firebase.apps.length?firebase.app():firebase.initializeApp(NEXUS_FIREBASE_CONFIG);fbAuth=firebase.auth(fbApp);fbDb=firebase.database(fbApp);}
+ return true;}
+async function enterOnline(){if(onlineBusy)return;onlineBusy=true;$('enterOnline').disabled=true;onlineStatus('Autenticando no Firebase...');
+ try{
+  ensureFirebase();const email=String($('loginEmail').value||'').trim().toLowerCase(),password=$('loginPass').value;
+  const profile=onlineSessionEmail(email),name=String($('playerName').value||'').trim().slice(0,24),color=Number($('avatarPick').value)||0;
+  if(!profile)throw new Error('Entre com uma das seis contas de equipe ou com a conta do Mestre.');
+  if(!name)throw new Error('Informe o nome do seu personagem.');
+  if(!password)throw new Error('Informe a senha do Firebase Authentication.');
+  const user=(await fbAuth.signInWithEmailAndPassword(email,password)).user;
+  if(!user||user.email?.toLowerCase()!==email){await fbAuth.signOut();throw new Error('Conta autenticada não corresponde ao e-mail informado.');}
+  // Nunca aceitar role selecionado pelo HTML: cargo derivado somente da conta autenticada.
+  const room=roomName();onlineMode=true;onlineReady=false;onlinePublic=null;onlineView=null;
+  identity={id:myId,uid:user.uid,room,name,role:profile.role,team:profile.team,color};
+  roomKey='';game=null;peers.clear();masterWatching=0;meetingUnlocked=false;lastRoundSeen=0;lastStageSeen=0;
+  fbRoomPath=NEXUS_ROOT+'/'+room;fbRoom=fbDb.ref(fbRoomPath);
+  sessStore.setItem('nexus_name',name);sessStore.setItem('nexus_color',String(color));
+  try{fbDb.ref('.info/serverTimeOffset').on('value',s=>{firebaseTimeOffset=Number(s.val())||0;});}catch(e){}
+  $('loginPass').value='';$('liveOverlay').classList.remove('liveShow');paused=false;
+  onlineStatus('Autenticado: '+(profile.role==='master'?'Mestre':'Equipe '+(profile.team+1))+'. Sincronizando...');
+  if(profile.role==='master'){
+   onlineMasterListen();await onlineInitializeMaster();
+  }else onlineTeamListen(profile.team);
+  if(profile.role==='team'){await onlineRegisterPresence();}
+  // Enquanto não chegam as primeiras publicações, o painel mantém a mensagem de carregamento.
+  showBanner(profile.role==='master'?'CONTROLE DO MESTRE CONECTADO':'EQUIPE '+(profile.team+1)+' CONECTADA AO FIREBASE');
+ }catch(e){console.error('Erro de conexão NEXUS',e);onlineStatus(onlineError(e));
+  if(onlineMode){onlineOff();onlineMode=false;identity=null;game=null;paused=true;$('liveOverlay').classList.add('liveShow');}
+  try{if(fbAuth?.currentUser)await fbAuth.signOut();}catch(err){}
+ }finally{onlineBusy=false;$('enterOnline').disabled=false;}
+}
+function onlineMirrorViews(g){
+ if(!g||identity?.role!=='master'||!onlineMode)return;
+ const publicState={version:5,revision:g.revision||0,room:g.room,epoch:g.epoch||'legacy',
+  round:g.round||0,maxRounds:g.maxRounds||3,teamCount:g.teamCount||6,duration:g.duration||480,
+  status:g.status||'waiting',startedAt:g.startedAt||0,message:g.message||'',completed:!!g.completed,
+  scores:(g.teams||[]).slice(0,g.teamCount).map(t=>({score:t.score,budget:t.budget}))};
+ const changes={publicGame:publicState};
+ for(let t=0;t<g.teamCount;t++)changes['teamViews/'+t]={revision:g.revision||0,epoch:g.epoch||'legacy',team:g.teams[t],assignment:g.assignments?.[t]||''};
+ return fbRoom.update(changes);
+}
+let mirrorChain=Promise.resolve();
+function onlineMirrorQueued(g){
+ const revision=g?.revision||0;if(revision<=lastProjectedRevision)return;
+ lastProjectedRevision=revision;const snapshot=JSON.parse(JSON.stringify(g));
+ mirrorChain=mirrorChain.then(()=>onlineMirrorViews(snapshot),()=>onlineMirrorViews(snapshot)).catch(e=>{
+  console.error('Erro projetando equipe',e);onlineStatus('Erro de publicação: '+onlineError(e));lastProjectedRevision=-1;});
+}
+function onlineMasterListen(){
+ const gameRef=fbRoom.child('masterGame');
+ const cb=s=>{const g=s.val();if(!g)return;
+  const first=!game;game=g;onlineReady=true;
+  if(first)openPanel();else{refreshWorld();renderPanelIfOpen();}
+  onlineMirrorQueued(g);
+  onlineStatus('Mestre online · estado oficial sincronizado · revisão '+(g.revision||0));
+ };
+ gameRef.on('value',cb,err=>onlineStatus('Leitura do Mestre: '+onlineError(err)));
+ onlineUnsubs.push(()=>gameRef.off('value',cb));
+ const actionsRef=fbRoom.child('actions');
+ const acb=s=>{if(identity?.role!=='master'||!onlineMode)return;
+  const all=s.val()||{};for(const teamKey of Object.keys(all))for(const [actionId,action] of Object.entries(all[teamKey]||{})){
+   if(!/^\d+$/.test(teamKey)||Number(teamKey)>5||!action||onlinePending.has(actionId)||game?.processedActions?.[actionId])continue;
+   onlinePending.add(actionId);
+   masterProcessing=masterProcessing.then(()=>onlineHandleAction(Number(teamKey),actionId,action))
+    .catch(e=>{console.error('Falha ao processar ação',e);onlineStatus('Falha ao processar: '+onlineError(e));})
+    .finally(()=>onlinePending.delete(actionId));
+  }
+ };
+ actionsRef.on('value',acb,err=>onlineStatus('Ações: '+onlineError(err)));
+ onlineUnsubs.push(()=>actionsRef.off('value',acb));
+ onlineWatchPresence(0);
+}
+async function onlineInitializeMaster(){
+ if(identity?.role!=='master')return;
+ const gameRef=fbRoom.child('masterGame');
+ const res=await gameRef.transaction(current=>{
+  if(current!==null)return;
+  const fresh=initialGame(identity.room);fresh.epoch='ep'+Math.random().toString(36).slice(2);return fresh;
+ },undefined,false);
+ if(!res.committed && !res.snapshot?.exists())throw new Error('Não foi possível criar a sala. Confira as regras de segurança.');
+}
+function onlineComposeTeam(){
+ if(!onlinePublic||!onlineView||onlinePublic.revision!==onlineView.revision)return;
+ const p=onlinePublic,v=onlineView;if(v.team===null||!v.team)return;
+ const ghostTeams=Array.from({length:6},teamTemplate);ghostTeams[identity.team]=v.team;
+ game={...p,teams:ghostTeams,assignments:{[identity.team]:v.assignment}};
+ onlineReady=true;const first=lastRoundSeen===-1;
+ if(first){lastRoundSeen=game.round;openPanel();}else{refreshWorld();renderPanelIfOpen();}
+ onlineStatus('Equipe '+(identity.team+1)+' online · revisão '+p.revision+' · '+(p.status==='active'?'rodada em andamento':'aguardando rodada'));
+}
+function onlineTeamListen(team){
+ lastRoundSeen=-1;
+ const pubRef=fbRoom.child('publicGame'),viewRef=fbRoom.child('teamViews').child(String(team));
+ const pcb=s=>{onlinePublic=s.val();onlineComposeTeam();};
+ const vcb=s=>{onlineView=s.val();onlineComposeTeam();};
+ pubRef.on('value',pcb,e=>onlineStatus('Estado público: '+onlineError(e)));
+ viewRef.on('value',vcb,e=>onlineStatus('Estado da equipe: '+onlineError(e)));
+ onlineUnsubs.push(()=>pubRef.off('value',pcb),()=>viewRef.off('value',vcb));
+ onlineWatchPresence(team);
+}
+async function onlineMasterMutate(fn){
+ if(!identity||!onlineMode||identity.role!=='master'||!fbRoom)return false;
+ try{
+  const res=await fbRoom.child('masterGame').transaction(current=>{
+   if(!current)return;const originalRev=current.revision||0;
+   const next=JSON.parse(JSON.stringify(current));if(fn(next)===false)return;
+   next.revision=originalRev+1;next.author=identity.id;return next;
+  },undefined,false);
+  if(res.committed){game=res.snapshot.val();refreshWorld();renderPanelIfOpen();onlineMirrorQueued(game);return true;}
+  return false;
+ }catch(e){console.error('Transação do Mestre',e);showNote(onlineError(e));return false;}
+}
+async function onlineSendAction(kind,payload){
+ if(!onlineMode||!onlineReady||identity?.role!=='team'||!fbRoom){showNote('Entre como equipe e aguarde a sincronização do Mestre.');return false;}
+ if(!roundActive()||currentRun()?.implementation){showNote('A rodada não permite mais essa ação.');return false;}
+ try{
+  const actionRef=fbRoom.child('actions').child(String(identity.team)).push();
+  const record={uid:identity.uid,actor:myId,name:identity.name,round:game.round,epoch:game.epoch||'legacy',kind,payload:{...payload},at:firebase.database.ServerValue.TIMESTAMP};
+  await actionRef.set(record);
+  showNote('Ação enviada ao Mestre para validação.');return true;
+ }catch(e){showNote('Ação não enviada: '+onlineError(e));return false;}
+}
+async function onlineHandleAction(teamIndex,actionId,a){
+ if(!onlineMode||identity?.role!=='master')return;
+ if(game?.processedActions?.[actionId])return;
+ let participants=1;
+ try{const snap=await fbRoom.child('presence').child(String(teamIndex)).once('value');
+  const t=now();participants=0;for(const sessions of Object.values(snap.val()||{}))for(const s of Object.values(sessions||{}))if(s?.name&&s.at&&t-s.at<12000)participants++;
+  participants=Math.max(1,participants);
+ }catch(e){console.warn('Presence count fallback',e);}
+ const ok=await onlineMasterMutate(g=>{
+  g.processedActions??={};if(g.processedActions[actionId])return false;
+  const result=onlineApplyAction(g,teamIndex,a,participants);
+  g.processedActions[actionId]={team:teamIndex,ok:result.ok,reason:result.reason||'',at:now()};
+  return true;
+ });
+ if(!ok)console.warn('Ação não confirmada, pode ser retomada depois',actionId);
+}
+function onlineStage(g){if(!g||!g.round)return 0;
+ const ratio=1-clamp((g.duration*1000-(now()-g.startedAt))/(Math.max(1,g.duration)*1000),0,1);
+ return ratio<.33?1:ratio<.68?2:3;}
+function onlineApplyAction(g,teamIndex,a,participants){
+ const reject=reason=>({ok:false,reason});
+ if(!a||!Number.isInteger(teamIndex)||teamIndex<0||teamIndex>=g.teamCount)return reject('Equipe inválida');
+ if(a.epoch!==(g.epoch||'legacy')||a.round!==g.round||g.completed||!g.round)return reject('Partida ou rodada diferente');
+ if(g.status!=='active')return reject('Rodada encerrada');
+ if(!Number.isFinite(a.at)||a.at>g.startedAt+g.duration*1000+1000)return reject('Prazo ultrapassado');
+ const t=g.teams[teamIndex],r=t?.rounds?.[String(g.round)];if(!r||r.implementation)return reject('Crise já encerrada');
+ const data=a.payload||{},actor=String(a.name||'Jogador').slice(0,24),actorId=String(a.actor||'').slice(0,90);
+ const log=what=>{r.events??=[];r.events.push({at:now(),by:actor,what});if(r.events.length>45)r.events.shift();};
+ switch(a.kind){
+ case 'evidence':{
+  const idx=Number(data.index);if(!Number.isInteger(idx)||idx<0||idx>2)return reject('Evidência desconhecida');
+  const clue=taskLocations(r.cardId)[idx];if(!clue||r.evidence[clue.id])return reject('Evidência já registrada');
+  r.evidence[clue.id]={by:actor,at:now(),title:clue.title,facts:clue.facts};log('Investigou: '+clue.title);return {ok:true};
+ }
+ case 'consult':{
+  const idx=Number(data.index),advisor=CONSULTANTS[r.cardId]?.[idx];
+  if(!Number.isInteger(idx)||!advisor)return reject('Consultoria inválida');
+  r.consultations??={};if(r.consultations[idx])return reject('Consultoria já usada');
+  if(t.budget<5)return reject('Orçamento insuficiente');
+  t.budget-=5;r.consultations[idx]={at:now(),by:actor,advice:advisor.advice};log('Consultou '+advisor.name+' (-5 pontos)');return {ok:true};
+ }
+ case 'propose':{
+  const cfg=POLICIES[r.cardId];if(!cfg||r.proposal)return reject('Já existe uma proposta');
+  if(Object.keys(r.evidence||{}).length<2)return reject('É preciso investigar duas evidências');
+  const value=Number(data.value),method=Number(data.method),note=String(data.note||'').trim().slice(0,240),protect=Boolean(data.protect);
+  if(!Number.isFinite(value)||value<cfg.min||value>cfg.max||!Number.isInteger(method)||method<0||method>2||!note)return reject('Parâmetros ou justificativa inválidos');
+  const need=Math.max(1,Math.floor(participants/2)+1);
+  r.proposal={value,method,protect,note,author:actor,by:actorId,votes:{[actorId]:'yes'},need,at:now(),approved:need===1};
+  log('Propôs: '+policySummary(r.cardId,r.proposal));return {ok:true};
+ }
+ case 'vote':{
+  const p=r.proposal;
+  if(!p||p.approved||p.votes?.[actorId])return reject('Voto indisponível ou já registrado');
+  const yes=data.yes===true;p.votes[actorId]=yes?'yes':'no';p.approved=proposalVotes(p)>=p.need;
+  log((yes?'Aprovou':'Rejeitou')+' a proposta.');return {ok:true};
+ }
+ case 'cancel':{
+  if(!r.proposal||r.proposal.approved)return reject('Proposta não pode ser retirada');
+  r.proposal=null;log('Retirou proposta para reabrir a negociação.');return {ok:true};
+ }
+ case 'deploy':{
+  if(!r.proposal?.approved)return reject('Proposta ainda não aprovada');
+  const stage=onlineStage(g),result=policyEffects(r.cardId,r.proposal,stage,t);
+  if(!result)return reject('Plano inválido');
+  let funds=t.budget,emergency=false;
+  if(funds<result.cost&&!t.reserve&&Math.min(120,funds+20)>=result.cost){funds=Math.min(120,funds+20);t.reserve=true;emergency=true;}
+  if(funds<result.cost){t.budget=clamp(funds-20,0,120);t.trust=clamp(t.trust-19);t.prod=clamp(t.prod-25);t.rep=clamp(t.rep-14);
+   r.implementation={policy:r.proposal,outcome:'colapso',cost:Math.min(funds,20),stage,when:now(),by:actor,note:'Orçamento insuficiente: medida não implantada',emergency:false};
+   log('Tentativa inviável. Sem recursos para implementar.');return {ok:true};}
+  t.budget=clamp(funds-result.cost,0,120);t.trust=result.stats.trust;t.prod=result.stats.prod;t.rep=result.stats.rep;
+  r.implementation={policy:r.proposal,outcome:result.outcome,cost:result.cost,stage,when:now(),by:actor,emergency,stats:result.stats};
+  log('Implantou: '+policySummary(r.cardId,r.proposal)+' · '+result.outcome+' · custo '+result.cost+'.');return {ok:true};
+ }
+ default:return reject('Ação desconhecida');
+ }
+}
+let lastOnlinePresence=0;
+function onlinePose(){if(!onlineMode||identity?.role!=='team'||!fbRoom)return;
+ if(!navigator.onLine)return;
+ const t=Date.now();if(t-lastOnlinePresence<280)return;lastOnlinePresence=t;
+ const path=fbRoom.child('presence').child(String(identity.team)).child(identity.uid).child(myId);
+ path.update({uid:identity.uid,name:identity.name,color:identity.color,x:Math.round(px*100)/100,z:Math.round(pz*100)/100,
+   yaw:Math.round(yaw*1000)/1000,jump:Math.max(0,Math.round((py-eyeHeight)*100)/100),at:firebase.database.ServerValue.TIMESTAMP}).catch(e=>{
+    if(e?.code==='PERMISSION_DENIED')onlineStatus('Sem permissão de presença: publique as regras do Firebase.');});
+}
+async function onlineRegisterPresence(){if(identity?.role!=='team')return;
+ const connectedRef=fbDb.ref('.info/connected');
+ const cb=async snap=>{if(!onlineMode||identity?.role!=='team'||!snap.val())return;
+  try{const path=fbRoom.child('presence').child(String(identity.team)).child(identity.uid).child(myId);
+    await path.onDisconnect().remove();onlinePose();}catch(e){console.error('Presence',e);onlineStatus('Presença: '+onlineError(e));}
+ };
+ connectedRef.on('value',cb);onlineUnsubs.push(()=>connectedRef.off('value',cb));
+}
+function onlineWatchPresence(team){
+ if(onlinePresenceUnsub){onlinePresenceUnsub();onlinePresenceUnsub=null;}
+ if(!onlineMode||!fbRoom)return;
+ for(const [id,a] of avatars){scene.remove(a.g);}avatars.clear();peers.clear();
+ const pRef=fbRoom.child('presence').child(String(team));
+ const cb=s=>{if(!onlineMode||!identity)return;
+  const n=now(),newPeers=new Map();for(const sessions of Object.values(s.val()||{}))for(const [id,p] of Object.entries(sessions||{})){
+   if(!p||id===myId||!p.name||!p.at||n-p.at>15000)continue;
+   newPeers.set(id,{name:String(p.name).slice(0,24),role:'team',team,color:Number(p.color)||0,
+    x:Number(p.x)||0,z:Number(p.z)||0,yaw:Number(p.yaw)||0,jump:Number(p.jump)||0,last:now()});
+  }peers=newPeers;
+ };
+ pRef.on('value',cb,e=>onlineStatus('Jogadores: '+onlineError(e)));
+ onlinePresenceUnsub=()=>pRef.off('value',cb);
+}
+const _previousMasterWatch=window.__nexusOnlineWatch;
+window.__nexusOnlineWatch=onlineWatchPresence;
+window.__nexusTransport={get mode(){return onlineMode?'firebase':'local';},get ready(){return onlineReady;},get email(){return fbAuth?.currentUser?.email||'';},get uid(){return fbAuth?.currentUser?.uid||'';}};
+window.addEventListener('online',()=>{if(onlineMode)onlineStatus('Internet reconectada · sincronizando Firebase...');});
+window.addEventListener('offline',()=>{if(onlineMode)onlineStatus('SEM INTERNET · ações e presença podem não sincronizar.');});
+const lastName=sessStore.getItem('nexus_name');if(lastName)$('playerName').value=lastName;
+const lastColor=sessStore.getItem('nexus_color');if(lastColor)$('avatarPick').value=lastColor;
+// Authentication credentials are NEVER persisted by the game code itself; Firebase maintains its own auth session.
+
+window.__nexusCoop={version:5,transport:'firebase-auth-realtime',get:()=>game,identity:()=>identity,enter:(role,team=0,name='Teste',room='NEXUS01')=>{ $('roomCode').value=room;$('playerName').value=name;$('teamPick').value=String(team);enterGame(role);},
+ masterStart,stop:masterStop,start:masterStart,investigate:(i)=>{const r=currentRun();if(r){activeClue=taskLocations(r.cardId)[i];$('incidentCollect').click();}},
+ meeting:()=>{meetingUnlocked=true;openPanel();},propose:proposePolicy,vote:votePlan,deploy:deployPlan,watch:t=>{masterWatching=t;refreshWorld();},players:()=>[...peers.values()],world:()=>activeIncidentKey};
+paused=true;
+
+})();
+
+</script></body></html>
