@@ -6,7 +6,7 @@
 #world{position:fixed;inset:0;touch-action:none}#world canvas{display:block;width:100%;height:100%}
 #header{position:fixed;inset:max(9px,env(safe-area-inset-top)) 12px auto;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;pointer-events:none;z-index:4}
 #location{min-width:0;padding:9px 12px;background:var(--glass);border:1px solid var(--line);border-radius:12px;box-shadow:0 5px 15px #182b4938;max-width:48vw;backdrop-filter:blur(5px)}#brand{font-weight:850;font-size:12px;letter-spacing:.06em}#where{font-size:12px;color:#e0eaf3;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#topActions{display:flex;gap:7px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end}#topActions button{background:var(--glass);color:#fff;border:1px solid var(--line);padding:10px 12px;border-radius:11px;backdrop-filter:blur(5px)}#topActions button.primary{background:#f6d76a;color:#192e3c;border-color:#ffeeb4}
+#topActions{display:flex;gap:7px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end}#topActions button{background:var(--glass);color:#fff;border:1px solid var(--line);padding:10px 12px;border-radius:11px;backdrop-filter:blur(5px)}#topActions button[hidden]{display:none}#topActions button.primary{background:#f6d76a;color:#192e3c;border-color:#ffeeb4}
 #waypoint{position:fixed;top:75px;right:12px;z-index:3;background:var(--glass);border:1px solid var(--line);padding:7px 11px;border-radius:10px;font-size:12px;max-width:min(56vw,230px);display:none;text-align:right;pointer-events:none;backdrop-filter:blur(4px)}#waypoint.on{display:block}#bearing{font-size:18px;font-weight:900;color:#ffdb75;margin-right:5px}
 #toast{position:fixed;bottom:105px;left:50%;transform:translateX(-50%);z-index:4;padding:9px 13px;border-radius:10px;background:#163047d9;border:1px solid #ffffff48;color:white;text-align:center;white-space:normal;max-width:85vw;min-width:170px;pointer-events:none;font-size:12px;transition:opacity .3s}
 #help{position:fixed;left:50%;bottom:15px;transform:translateX(-50%);background:#172b3ac9;border:1px solid #ffffff35;border-radius:9px;padding:8px 12px;font-size:12px;color:#e6f1f7;pointer-events:none;white-space:nowrap;z-index:3}
@@ -79,7 +79,7 @@ button:disabled{cursor:not-allowed;filter:saturate(.5)}
 #joinInfo{max-height:85px;overflow:auto}@media(max-height:540px){#joinInfo{max-height:52px}}
 </style></head><body>
 <div id="world"></div>
-<header id="header"><div id="location"><div id="brand">NEXUS RH · CAMPUS COOPERATIVO</div><div id="where">Praça central</div></div><div id="topActions"><button id="mapBtn">⌖ MAPA</button><button id="menuBtn">☰</button><button id="terminalBtn" class="primary">▣ MISSÃO</button></div></header>
+<header id="header"><div id="location"><div id="brand">NEXUS RH · CAMPUS COOPERATIVO</div><div id="where">Praça central</div></div><div id="topActions"><button id="mapBtn">⌖ MAPA</button><button id="menuBtn">☰</button><button id="masterPanelBtn" class="primary" hidden>Painel do Mestre</button><button id="terminalBtn" class="primary">▣ MISSÃO</button></div></header>
 <div id="waypoint"><span id="bearing">↑</span><span id="targetText"></span></div>
 <div id="toast">Explore o campus. Use MAPA para encontrar os departamentos.</div>
 <div id="help">WASD: mover • Shift: correr • Espaço: pular • E: interagir • M: mapa • V: câmera</div>
@@ -552,7 +552,8 @@ function animateScenario(now,dt){
 }
 
 // Movement and collision: radius-aware swept substeps, separating X and Z to slide along walls.
-let px=0,pz=0,py=1.7,vY=0,yaw=0,pitch=-.02,grounded=true,sprint=false;
+const spawn={x:0,z:4.6};
+let px=spawn.x,pz=spawn.z,py=1.7,vY=0,yaw=0,pitch=-.02,grounded=true,sprint=false;
 const keys=Object.create(null),joy={x:0,y:0},eyeHeight=1.7;
 function resetInputs(){for(const k of Object.keys(keys))keys[k]=false;joy.x=joy.y=0;$('knob').style.transform='translate(0px,0px)';}
 function blocked(x,z){if(x< -48+playerRadius||x>48-playerRadius||z< -48+playerRadius||z>48-playerRadius)return true;
@@ -568,7 +569,7 @@ btnRun.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation()
 btnJump.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();jump();});
 btnRun.addEventListener('click',e=>e.preventDefault());
 btnJump.addEventListener('click',e=>e.preventDefault());
-$('returnCenter').onclick=()=>{px=pz=0;py=eyeHeight;vY=0;grounded=true;yaw=0;pitch=-.02;$menu.classList.remove('show');paused=false;inform('Você voltou à praça central');};
+$('returnCenter').onclick=()=>{px=spawn.x;pz=spawn.z;py=eyeHeight;vY=0;grounded=true;yaw=0;pitch=-.02;$menu.classList.remove('show');paused=false;inform('Você voltou à praça central');};
 window.addEventListener('keydown',e=>{if(e.key==='Escape'){if($map.classList.contains('show'))closeMap();else if($menu.classList.contains('show')){$menu.classList.remove('show');paused=false;}else if($term.classList.contains('show'))closeTerminal();return;}
  if(paused)return;const k=e.key.toLowerCase();if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();if(k==='m'){openMap();return;}if(k==='tab'){e.preventDefault();window.nexusOpenPanel?.();return;}if(k==='e'){window.nexusInteract?.();return;}if(k===' '){if(!e.repeat)jump();return;}keys[k]=true;});
 window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});window.addEventListener('blur',resetInputs);
@@ -968,11 +969,13 @@ function masterDashboard(){let h=`<div class="liveBox"><h2>Central do Mestre · 
  if(game.completed||game.round>=game.maxRounds){const order=game.teams.slice(0,game.teamCount).map((t,i)=>({name:teamLabel(i),score:t.score})).sort((a,b)=>b.score-a.score);h+=`<div class="liveBox"><h3>🏆 Classificação</h3>${order.map((o,i)=>`<div class="liveScore">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)} ${esc(o.name)}<b>${o.score} pts</b></div>`).join('')}</div>`;}
  h+=`<div class="liveBox"><button id="exportGame">↓ Exportar registro JSON da competição</button><button id="resetGame" class="liveDanger">Reiniciar competição</button><p class="liveSmall">Mantenha a sessão do Mestre aberta durante a partida.</p></div>`;return h;}
 function showOverview(){const t=currentTeam(),r=currentRun();return `<div class="liveBox"><h2>${identity.role==='master'?'Painel do Mestre':teamLabel(identity.team)+' · '+identity.name}</h2><div class="stats"><span>◈ Orçamento<br><b>${t.budget}</b></span><span>♡ Confiança<br><b>${t.trust}%</b></span><span>▣ Produtividade<br><b>${t.prod}%</b></span><span>✦ Reputação<br><b>${t.rep}%</b></span></div><p class="liveSmall">Indicadores persistem entre rodadas. O orçamento é consumido ao implementar soluções.</p></div>`;}
+$('masterPanelBtn').onclick=()=>openPanel();
 function openPanel(){if(!identity){$('liveOverlay').classList.add('liveShow');return;}$('mapModal').classList.remove('show');$('menuModal').classList.remove('show');$('livePanel').hidden=false;paused=true;resetInputs();document.exitPointerLock?.();renderPanel();}
 function closePanel(){$('livePanel').hidden=true;paused=false;meetingUnlocked=false;}
 function renderPanelIfOpen(){if(!identity||$('livePanel').hidden)return;const a=document.activeElement;if(a&&$('livePanel').contains(a)&&['INPUT','TEXTAREA','SELECT'].includes(a.tagName))return;renderPanel();}
-function renderPanel(){if(!identity||!game)return;const b=$('livePanelBody');$('panelSubtitle').textContent=identity.role==='master'?'Central de Controle · ONLINE FIREBASE':'Missão cooperativa · '+teamLabel(identity.team);
- b.innerHTML=showOverview()+(identity.role==='master'?masterDashboard():showMission())+`<div class="liveBox"><button id="logoutGame">Sair da conta</button></div>`;
+function renderPanel(){if(!identity)return;const b=$('livePanelBody');$('panelSubtitle').textContent=identity.role==='master'?'Central de Controle · ONLINE FIREBASE':'Missão cooperativa · '+teamLabel(identity.team);
+ if(!game){b.textContent=identity.role==='master'?'Sincronizando o painel do Mestre com o Firebase...':'Aguardando o Mestre publicar a sala...';return;}
+ b.innerHTML=(identity.role==='master'?masterDashboard():showOverview()+showMission())+`<div class="liveBox"><button id="logoutGame">Sair da conta</button></div>`;
  const click=(id,cb)=>{const el=$(id);if(el)el.onclick=cb;};click('logoutGame',()=>{if(!onlineMode)send({type:'bye'});logout();});
  if(identity.role==='master'){click('startRound',masterStart);click('stopTime',masterStop);click('endGame',masterEnd);click('saveSettings',masterSettings);click('postMessage',masterMessage);click('resetGame',resetGame);click('exportGame',exportGame);
   const sel=$('watchTeam');if(sel)sel.onchange=()=>{masterWatching=Number(sel.value);if(onlineMode)onlineWatchPresence(masterWatching);disposeIncident();refreshWorld();renderPanel();};
@@ -1058,7 +1061,8 @@ function onlineSessionEmail(email){
 function onlineOff(){for(const unsub of onlineUnsubs.splice(0)){try{unsub();}catch(e){}}if(onlinePresenceUnsub){onlinePresenceUnsub();onlinePresenceUnsub=null;}if(fbRoom&&identity?.role==='team'){
  try{fbRoom.child('presence').child(String(identity.team)).child(identity.uid).child(myId).remove().catch(()=>{});}catch(e){}
  }onlinePending.clear();onlineReady=false;onlinePublic=null;onlineView=null;lastProjectedRevision=-1;}
-async function logoutOnline(){onlineOff();onlineMode=false;onlineBusy=false;
+function resetRoleButtons(){$('masterPanelBtn').hidden=true;$('terminalBtn').hidden=false;}
+async function logoutOnline(){resetRoleButtons();onlineOff();onlineMode=false;onlineBusy=false;
  if(ownAvatar){scene.remove(ownAvatar.g);ownAvatar=null;}thirdPerson=false;identity=null;game=null;peers.clear();for(const a of avatars.values())scene.remove(a.g);avatars.clear();disposeIncident();resetInputs();paused=true;
  $('liveOverlay').classList.add('liveShow');$('livePanel').hidden=true;$('incidentStrip').hidden=true;
  try{await fbAuth?.signOut();}catch(e){}onlineStatus('Sessão encerrada. Entre novamente para voltar ao jogo.');}
@@ -1081,6 +1085,9 @@ async function enterOnline(){if(onlineBusy)return;onlineBusy=true;$('enterOnline
   const color=Number($('avatarPick').value)||0;
   const room=roomName();onlineMode=true;onlineReady=false;onlinePublic=null;onlineView=null;
   identity={id:myId,uid:user.uid,room,name,role:profile.role,team:profile.team,color};
+  $('masterPanelBtn').hidden=profile.role!=='master';
+  $('terminalBtn').hidden=profile.role==='master';
+  if(blocked(px,pz)){px=spawn.x;pz=spawn.z;}
   roomKey='';game=null;peers.clear();masterWatching=0;meetingUnlocked=false;lastRoundSeen=0;lastStageSeen=0;
   fbRoomPath=NEXUS_ROOT+'/'+room;fbRoom=fbDb.ref(fbRoomPath);
   sessStore.setItem('nexus_name',$('playerName').value.trim());sessStore.setItem('nexus_color',String(color));
@@ -1088,13 +1095,13 @@ async function enterOnline(){if(onlineBusy)return;onlineBusy=true;$('enterOnline
   $('loginPass').value='';$('liveOverlay').classList.remove('liveShow');paused=false;
   onlineStatus('Autenticado: '+(profile.role==='master'?'Mestre':'Equipe '+(profile.team+1))+'. Sincronizando...');
   if(profile.role==='master'){
-   onlineMasterListen();await onlineInitializeMaster();
+   openPanel();onlineMasterListen();await onlineInitializeMaster();
   }else onlineTeamListen(profile.team);
   if(profile.role==='team'){await onlineRegisterPresence();}
   // Enquanto não chegam as primeiras publicações, o painel mantém a mensagem de carregamento.
   showBanner(profile.role==='master'?'CONTROLE DO MESTRE CONECTADO':'EQUIPE '+(profile.team+1)+' CONECTADA AO FIREBASE');
  }catch(e){console.error('Erro de conexão NEXUS',e);onlineStatus(onlineError(e));
-  if(onlineMode){onlineOff();onlineMode=false;identity=null;game=null;paused=true;$('liveOverlay').classList.add('liveShow');}
+  if(onlineMode){resetRoleButtons();$('livePanel').hidden=true;onlineOff();onlineMode=false;identity=null;game=null;paused=true;$('liveOverlay').classList.add('liveShow');}
   try{if(fbAuth?.currentUser)await fbAuth.signOut();}catch(err){}
  }finally{onlineBusy=false;$('enterOnline').disabled=false;}
 }
@@ -1115,10 +1122,25 @@ function onlineMirrorQueued(g){
  mirrorChain=mirrorChain.then(()=>onlineMirrorViews(snapshot),()=>onlineMirrorViews(snapshot)).catch(e=>{
   console.error('Erro projetando equipe',e);onlineStatus('Erro de publicação: '+onlineError(e));lastProjectedRevision=-1;});
 }
+// Firebase omits empty maps. Restore them before render and mutation.
+function restoreTeamCollections(team){
+ team.rounds??={};
+ for(const round of Object.values(team.rounds)){
+  if(!round)continue;
+  round.evidence??={};round.consultations??={};
+  round.events??=[];
+  if(round.proposal)round.proposal.votes??={};
+ }
+ return team;
+}
+function restoreGameCollections(state){
+ for(const team of state.teams)if(team)restoreTeamCollections(team);
+ return state;
+}
 function onlineMasterListen(){
  const gameRef=fbRoom.child('masterGame');
  const cb=s=>{const g=s.val();if(!g)return;
-  const first=!game;game=g;onlineReady=true;
+  const first=!game;game=restoreGameCollections(g);onlineReady=true;
   if(first)openPanel();else{refreshWorld();renderPanelIfOpen();}
   onlineMirrorQueued(g);
   onlineStatus('Mestre online · estado oficial sincronizado · revisão '+(g.revision||0));
@@ -1151,7 +1173,7 @@ async function onlineInitializeMaster(){
 function onlineComposeTeam(){
  if(!onlinePublic||!onlineView||onlinePublic.revision!==onlineView.revision)return;
  const p=onlinePublic,v=onlineView;if(v.team===null||!v.team)return;
- const ghostTeams=Array.from({length:6},teamTemplate);ghostTeams[identity.team]=v.team;
+ const ghostTeams=Array.from({length:6},teamTemplate);ghostTeams[identity.team]=restoreTeamCollections(v.team);
  game={...p,teams:ghostTeams,assignments:{[identity.team]:v.assignment}};
  onlineReady=true;const first=lastRoundSeen===-1;
  if(first){lastRoundSeen=game.round;openPanel();}else{refreshWorld();renderPanelIfOpen();}
@@ -1172,10 +1194,10 @@ async function onlineMasterMutate(fn){
  try{
   const res=await fbRoom.child('masterGame').transaction(current=>{
    if(!current)return;const originalRev=current.revision||0;
-   const next=JSON.parse(JSON.stringify(current));if(fn(next)===false)return;
+   const next=restoreGameCollections(JSON.parse(JSON.stringify(current)));if(fn(next)===false)return;
    next.revision=originalRev+1;next.author=identity.id;return next;
   },undefined,false);
-  if(res.committed){game=res.snapshot.val();refreshWorld();renderPanelIfOpen();onlineMirrorQueued(game);return true;}
+  if(res.committed){game=restoreGameCollections(res.snapshot.val());refreshWorld();renderPanelIfOpen();onlineMirrorQueued(game);return true;}
   return false;
  }catch(e){console.error('Transação do Mestre',e);showNote(onlineError(e));return false;}
 }
