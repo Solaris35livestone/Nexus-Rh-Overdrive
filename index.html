@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no"><title>NEXUS RH: OVERDRIVE — Multiplayer Firebase 5</title>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no"><title>NEXUS RH: OVERDRIVE — Versão final</title>
 <style>
 :root{--ink:#f5fbff;--night:#122538;--glass:rgba(18,37,56,.78);--line:rgba(255,255,255,.24);--accent:#ffda79}
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;font:500 14px system-ui,-apple-system,Arial,sans-serif;color:var(--ink);background:#a8d3ee}button{font:700 13px system-ui;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
@@ -57,7 +57,6 @@
 #incidentNear{position:fixed;z-index:5;bottom:70px;left:50%;transform:translateX(-50%);padding:9px 13px;max-width:min(85vw,380px);background:#1a3448ed;color:#f8e3a5;border:1px solid #f8da87;border-radius:10px;pointer-events:none;font-weight:800;text-align:center;font-size:12px}
 #incidentDialogFacts{background:#24465b;border-left:4px solid #f1ce73;padding:10px;white-space:pre-wrap;font-size:13px;line-height:1.5}
 #joinInfo{display:block;color:#ffdaac;line-height:1.5;font-size:11px;margin-top:10px}
-#offlineNotice{color:#bed5e0;font-size:12px;line-height:1.5}
 @media(pointer:coarse){#waypoint{top:159px;right:9px;max-width:47vw}#liveHud{top:58px;left:9px;right:9px;justify-content:space-between;max-width:none;padding:6px 7px;font-size:10px}#liveRole{font-size:9px;max-width:40vw;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}#liveBudget{font-size:9px}#liveClock{font-size:14px}#incidentStrip{top:101px;left:9px;max-width:72vw}#incidentNear{bottom:156px}}
 @media(max-width:460px){.liveCard{padding:14px}.liveCard.wide{padding:11px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.liveGrid.three{gap:4px}.liveGrid.three button{font-size:11px;padding:6px}#liveHud{gap:4px}}
 @media(max-height:540px){#waypoint{top:96px;max-width:38vw}#incidentStrip{top:52px;left:auto;right:9px;max-width:45vw;font-size:10px}#incidentNear{bottom:100px}#liveHud{top:51px}#liveBanner{top:90px}}
@@ -77,7 +76,6 @@ button:disabled{cursor:not-allowed;filter:saturate(.5)}
 @media(pointer:coarse){#incidentStrip{max-width:52vw;font-size:10px}#waypoint{max-width:41vw}}
 @media(max-height:510px){#incidentStrip{top:52px;max-width:43vw}#liveOverlay .liveCard{max-height:96dvh}}
 #onlineState{padding:9px 11px;border-radius:8px;background:#173a45;border:1px solid #4b7d7d;font-size:12px;line-height:1.4;margin:8px 0}
-.demoMode{padding:8px;border:1px dashed #688296;border-radius:8px;margin-top:12px}.demoMode summary{font-size:11px;cursor:pointer;color:#d4e0e6}
 #joinInfo{max-height:85px;overflow:auto}@media(max-height:540px){#joinInfo{max-height:52px}}
 </style></head><body>
 <div id="world"></div>
@@ -95,19 +93,15 @@ button:disabled{cursor:not-allowed;filter:saturate(.5)}
 <div id="liveHud"><span id="liveRole">NEXUS COOPERATIVO</span><b id="liveRound">AGUARDANDO</b><span id="liveBudget">◈ 100</span><span id="liveClock">--:--</span></div>
 <div id="liveBanner" hidden></div><div id="incidentStrip" hidden></div><div id="incidentNear" hidden></div>
 <section id="liveOverlay" class="liveShow"><div class="liveCard">
- <div class="liveBrand">NEXUS RH: OVERDRIVE <small>VERSÃO 5 · MULTIPLAYER ONLINE · 3 RODADAS POR PADRÃO</small></div>
- <h2>Seu personagem, sua empresa</h2><p class="liveMuted">Entre com sua conta do novo Firebase. A equipe é identificada automaticamente; cada navegador controla seu próprio personagem na empresa compartilhada.</p>
- <label>Nome do personagem<input id="playerName" type="text" maxlength="24" placeholder="Ex.: Alex" autocomplete="off" value=""></label>
- <label>Código da sala (igual em todos os dispositivos)<input id="roomCode" type="text" maxlength="18" value="NEXUS01" autocomplete="off"></label>
- <div class="liveGrid two"><label>E-mail do Firebase<input id="loginEmail" type="email" placeholder="equipe1@cyberrh.example" autocomplete="username" autocapitalize="none"></label><label>Senha<input id="loginPass" type="password" placeholder="Sua senha do Authentication" autocomplete="current-password"></label></div>
- <label id="localTeamLabel" hidden>Equipe para demonstração LOCAL<select id="teamPick"><option value="0">Equipe Alfa</option><option value="1">Equipe Beta</option><option value="2">Equipe Gamma</option><option value="3">Equipe Delta</option><option value="4">Equipe Épsilon</option><option value="5">Equipe Zeta</option></select></label>
- <label>Roupa do avatar<select id="avatarPick"><option value="0">Azul — Técnico</option><option value="1">Dourado — Gestor</option><option value="2">Verde — Analista</option><option value="3">Roxo — Consultor</option><option value="4">Coral — Operações</option><option value="5">Turquesa — Administrativo</option></select></label>
+ <div class="liveBrand">NEXUS RH: OVERDRIVE <small>MULTIPLAYER ONLINE</small></div>
+ <h2>Entrar na partida</h2>
+ <label>Nome do personagem (opcional)<input id="playerName" type="text" maxlength="24" placeholder="Ex.: Alex" autocomplete="off" value=""></label>
+ <label>Sala (padrão: NEXUS01)<input id="roomCode" type="text" maxlength="18" value="NEXUS01" autocomplete="off"></label>
+ <div class="liveGrid two"><label>Perfil<select id="loginProfile"><option value="">Selecione</option><option value="master">Mestre</option><option value="1">Equipe 1 · Alfa</option><option value="2">Equipe 2 · Beta</option><option value="3">Equipe 3 · Gamma</option><option value="4">Equipe 4 · Delta</option><option value="5">Equipe 5 · Épsilon</option><option value="6">Equipe 6 · Zeta</option></select></label><label>Senha<input id="loginPass" type="password" autocomplete="current-password"></label></div>
+ <label>Roupa do avatar<select id="avatarPick"><option value="0">Camisa azul e calça de alfaiataria</option><option value="1">Terno grafite e gravata</option><option value="2">Camisa oliva e calça cáqui</option><option value="3">Blazer marinho e camisa clara</option><option value="4">Uniforme de operações</option><option value="5">Blazer bege e camisa clara</option></select></label>
  <button id="enterOnline" class="liveAccent">☁ ENTRAR NO NEXUS ONLINE</button>
- <div id="onlineState" role="status" aria-live="polite">Novo Firebase: conexão pendente. A conta determina se você é Mestre ou Equipe.</div>
- <details class="demoMode"><summary>Demonstração local (sem Firebase)</summary><p class="liveSmall">Use somente para ensaios isolados. Os dados locais não aparecem para os demais celulares e não valem na competição online.</p><button id="enterTeam">Entrar como jogador DEMO</button><button id="enterMaster">Entrar como Mestre DEMO</button></details>
+ <div id="onlineState" role="status" aria-live="polite">Selecione seu perfil e informe a senha.</div>
  <button id="resumeGame" hidden>Retornar ao jogo</button>
- <p id="offlineNotice"><b>Firebase independente:</b> este jogo utiliza apenas o projeto NEXUS RH. Para que celulares distintos sincronizem, publique este HTML em endereço HTTPS autorizado no Firebase. O Mestre precisa manter o painel conectado para validar solicitações das equipes; o jogo avisa quando a conexão cair.</p>
- <small id="joinInfo">Contas de equipe são compartilhadas nesta etapa: cada aparelho terá personagem distinto, mas a autoria segura por aluno exige contas individuais no futuro. Não divulgue a senha do Mestre.</small>
 </div></section>
 <section id="incidentDialog" class="liveOverlay" hidden><div class="liveCard">
  <div class="liveBrand">INVESTIGAÇÃO NO CAMPUS</div><h2 id="incidentDialogTitle"></h2><p id="incidentDialogText"></p>
@@ -202,25 +196,62 @@ function box(x,y,z,w,h,d,color,solid=false){
  if(solid)colliders.push({x1:x-w/2,x2:x+w/2,z1:z-d/2,z2:z+d/2});
 }
 function mat(color){return new THREE.MeshLambertMaterial({color});}
+
+const shellGeo=new THREE.CylinderGeometry(1,1,1,28);
+const foliageGeo=new THREE.SphereGeometry(1,10,7);
+const architecture=new Map();
+function architecturalPiece(geometry,color,x,y,z,w,h,d,angle=0){
+ const key=geometry.uuid+':'+color;
+ if(!architecture.has(key))architecture.set(key,{geometry,color,items:[]});
+ architecture.get(key).items.push({x,y,z,w,h,d,angle});
+}
+function roundedSlab(width,depth,radius){
+ const x=width/2,z=depth/2,r=radius, shape=new THREE.Shape();
+ shape.moveTo(-x+r,-z);
+ shape.lineTo(x-r,-z);shape.quadraticCurveTo(x,-z,x,-z+r);
+ shape.lineTo(x,z-r);shape.quadraticCurveTo(x,z,x-r,z);
+ shape.lineTo(-x+r,z);shape.quadraticCurveTo(-x,z,-x,z-r);
+ shape.lineTo(-x,-z+r);shape.quadraticCurveTo(-x,-z,-x+r,-z);
+ const geo=new THREE.ExtrudeGeometry(shape,{depth:1,bevelEnabled:false,curveSegments:5});
+ geo.translate(0,0,-.5);geo.rotateX(-Math.PI/2);return geo;
+}
+const roofGeo=roundedSlab(16,13.5,1.35), awningGeo=roundedSlab(5.5,2.3,.65);
+const tileGeo=roundedSlab(17,17,2.3), counterGeo=roundedSlab(5.6,1.7,.55);
+const tableGeo=roundedSlab(2.45,1.25,.2);
+const stone=0xbec4bf, plaster=0xe0ddd3, steel=0x33454b, glass=0x547787, wood=0xa27e5d;
+
 // Ground (one simple plane), plaza, walkways with clear shapes and contrasting materials.
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(100,100),mat(0x83b671));ground.rotation.x=-Math.PI/2;ground.position.y=-.10;scene.add(ground);
 box(0,-.02,0,84,.16,12,0x82959a);box(0,-.016,0,11,.16,86,0x82959a);
 // Wide central square, light border and garden squares.
-box(0,-.01,0,17,.16,17,0xdacbaf);
+architecturalPiece(tileGeo,0xd3cec2,0,.06,0,1,.16,1);
 const centerRing=new THREE.Mesh(new THREE.RingGeometry(6.2,6.6,48),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide}));centerRing.rotation.x=-Math.PI/2;centerRing.position.y=.09;scene.add(centerRing);
-box(0,.23,0,2.4,.45,2.4,0x6196ac);box(0,.54,0,.5,.4,.5,0xffffff);
+architecturalPiece(shellGeo,steel,0,.23,0,2.4,.45,2.4);
+architecturalPiece(shellGeo,0x6b9fae,0,.46,0,2.23,.045,2.23);
+architecturalPiece(shellGeo,plaster,0,.57,0,.35,.23,.35);
+colliders.push({x1:-2.1,x2:2.1,z1:-2.1,z2:2.1});
 // Characteristic six color buildings, true four-wall collision and open entrances.
 for(const b of buildings){
  const s=b.side,front=b.z+s*6,back=b.z-s*6,roofY=4.25;
+ for(const side of [-1,1])for(const edge of [-1,1])architecturalPiece(shellGeo,stone,b.x+side*7.43,2.05,b.z+edge*5.79,.31,4.1,.31);
  box(b.x,.09,b.z,15,.2,12.5,0xc9c6ba);
- box(b.x,roofY,b.z,15.7,.55,13.2,b.roof); // roof, raised
+ architecturalPiece(roofGeo,steel,b.x,roofY,b.z,1,.5,1);
+ architecturalPiece(roofGeo,plaster,b.x,roofY+.34,b.z,.98,.19,.98);
+ architecturalPiece(awningGeo,steel,b.x,3.13,front+s*1.05,1,.22,1);
+ architecturalPiece(awningGeo,plaster,b.x,3.28,front+s*1.05,.99,.09,.99);
+ for(const side of [-1,1]){
+   architecturalPiece(shellGeo,steel,b.x+side*2.30,1.56,front+s*1.72,.11,3.12,.11);
+   architecturalPiece(shellGeo,stone,b.x+side*3.32,.25,front+s*1.18,.43,.5,.43);
+   architecturalPiece(foliageGeo,0x437151,b.x+side*3.32,.67,front+s*1.18,.39,.42,.39);
+ }
+ box(b.x,.14,front+s*.78,3.3,.055,1.25,steel);
  // Three horizontal wall segments on the entrance side leave a real passage.
- box(b.x-4.45,2.05,front,6.1,4.1,.42,b.walls,true);
- box(b.x+4.45,2.05,front,6.1,4.1,.42,b.walls,true);
- box(b.x,3.56,front,2.8,1.08,.42,b.walls); // lintel is overhead, not a horizontal collision
- box(b.x,2.05,back,15,4.1,.42,b.walls,true);
- box(b.x-7.5,2.05,b.z,.42,4.1,12.4,b.walls,true);
- box(b.x+7.5,2.05,b.z,.42,4.1,12.4,b.walls,true);
+ box(b.x-4.45,2.05,front,6.1,4.1,.42,plaster,true);
+ box(b.x+4.45,2.05,front,6.1,4.1,.42,plaster,true);
+ box(b.x,3.56,front,2.8,1.08,.42,plaster); // lintel is overhead, not a horizontal collision
+ box(b.x,2.05,back,15,4.1,.42,plaster,true);
+ box(b.x-7.5,2.05,b.z,.42,4.1,12.4,plaster,true);
+ box(b.x+7.5,2.05,b.z,.42,4.1,12.4,plaster,true);
  // Door frame visibly distinct; no physical wall in the doorway.
  box(b.x-1.53,1.55,front+s*.15,.25,3.05,.7,b.color);
  box(b.x+1.53,1.55,front+s*.15,.25,3.05,.7,b.color);
@@ -228,18 +259,25 @@ for(const b of buildings){
  // Exterior sign band and corners help distinguish solid building volumes.
  box(b.x,3.99,front+s*.3,11.6,.28,.18,b.color);
  for(const sideX of [-7.1,7.1])box(b.x+sideX,2,b.z,.25,3.8,12.4,b.color);
- // Windows on front, in contrast, kept away from the doorway.
- for(let ix=-5.7;ix<=5.7;ix+=3.8){if(Math.abs(ix)<2.7)continue;box(b.x+ix,2.2,front+s*.30,1.65,1.65,.10,0x577789);}
- // Side windows have clean horizontal rhythm.
- for(const sideX of [-7.82,7.82])for(const wZ of [-3,0,3])box(b.x+sideX,2.18,b.z+wZ,.12,1.25,1.75,0x769ca7);
- // Accent stripes on roofs and identifying architectural silhouettes.
- box(b.x,4.58,b.z,13,.13,10.7,b.color);
- if(b.id==='TI'){for(const xx of [-2.2,2.2])box(b.x+xx,5.63,b.z,1.1,1.9,1.1,0x5d7688);}
- if(b.id==='RH'){box(b.x,5.1,b.z,7,.6,2.2,0xffe2ac);}
- if(b.id==='DIR'){box(b.x,5.35,b.z,4,1.4,3.6,0x9573a8);box(b.x,6.25,b.z,.8,.5,.8,0xf1d5ff);}
- if(b.id==='FIN'){for(const x of [-4.5,4.5])box(b.x+x,5.1,b.z,1,1.1,1,0x4b8e69);}
- if(b.id==='OPS'){box(b.x+4,5.7,b.z-2,1.6,2.7,1.6,0xb15d3b);}
- if(b.id==='MST'){box(b.x,5.3,b.z,3,1.6,3,0x9e4656);box(b.x,6.18,b.z,.9,.35,.9,0xf5d194);}
+ // Framed glazing and reflected sky strips on each office facade.
+ for(const xx of [-6,-4.5,-3,3,4.5,6]){
+   box(b.x+xx,2.16,front+s*.242,1.44,2.25,.065,steel);
+   box(b.x+xx,2.16,front+s*.282,1.31,2.05,.035,glass);
+   box(b.x+xx,2.78,front+s*.304,1.24,.28,.012,0x88a4ad);
+   box(b.x+xx,1.6,front+s*.304,1.24,.035,.012,0xa8b9bd);
+ }
+ for(const side of [-1,1])for(const dz of [-3.7,0,3.7]){
+   const x=b.x+side*7.75;
+   box(x,2.2,b.z+dz,.09,1.9,2.95,steel);
+   box(x+side*.058,2.2,b.z+dz,.04,1.72,2.72,glass);
+   box(x+side*.082,2.58,b.z+dz,.012,.035,2.62,0x9eb4bd);
+ }
+ for(const dz of [-2.6,2.6])box(b.x,3.84,b.z+dz,6.5,.07,.19,0xf6eee0);
+ for(const x of [-4.7,4.7]){
+   const z=b.z-s*4.5;
+   box(b.x+x,.76,z,1.65,1.5,.64,wood,true);
+   for(const height of [.39,.73,1.07])box(b.x+x,height,z+s*.338,1.45,.035,.045,steel);
+ }
  // Interior functional silhouettes. Each uses its own color scheme.
  const desk= b.id==='TI'?0x446a7f:b.id==='RH'?0xa57b55:b.id==='FIN'?0x689476:b.id==='OPS'?0x9e7259:b.id==='MST'?0x996a70:0x80708c;
  if(b.id==='TI'){
@@ -250,10 +288,23 @@ for(const b of buildings){
    box(b.x,1.0,b.z-s*2.0,6.8,1.8,1.3,desk,true);
    for(const x of [-2.2,0,2.2])box(b.x+x,2.0,b.z-s*2.0,1.55,.9,.15,0x304d65);
  }else if(b.id==='DIR'){
-   box(b.x,1.0,b.z,6.2,.75,2.1,desk,true);
+   box(b.x,.45,b.z,4,.8,.65,steel);
+   architecturalPiece(counterGeo,wood,b.x,1,b.z,1,.2,1);
+   colliders.push({x1:b.x-2.8,x2:b.x+2.8,z1:b.z-.85,z2:b.z+.85});
    for(const x of [-3,3])box(b.x+x,.6,b.z,1.1,1.05,1.2,0x63546e,true);
  }else{
-   for(const x of [-3.7,3.7]){box(b.x+x,1.0,b.z-s*.4,2.5,.55,1.4,desk,true);box(b.x+x,1.6,b.z-s*.4,1.3,.85,.16,0x435f70);}
+   for(const x of [-3.7,3.7]){
+    const xx=b.x+x,z=b.z-s*.4;
+    architecturalPiece(tableGeo,wood,xx,.96,z,1,.12,1);
+    box(xx,.93,z,2.4,.08,1.22,wood,true);
+    for(const leg of [-.98,.98])box(xx+leg,.48,z,.08,.91,1.07,steel);
+    box(xx,1.33,z,1.16,.6,.11,steel);
+    box(xx,1.33,z+s*.06,1.06,.5,.025,0x809fa9);
+    box(xx,1.03,z+s*.36,.68,.04,.23,steel);
+    const chairZ=z-s*.98;
+    architecturalPiece(shellGeo,steel,xx,.55,chairZ,.43,.13,.42);
+    box(xx,.91,chairZ-s*.19,.72,.56,.14,0x526363);
+   }
  }
  // Short coloured entrance carpet and a perpendicular path to the primary corridor.
  box(b.x,.02,b.z+s*9,3.6,.09,6.1,0xa3abb0);
@@ -272,7 +323,13 @@ for(const b of buildings){const s=b.side;const board=new THREE.Mesh(new THREE.Pl
 }
 // Trees and greenery are distinct but sparse for mobile performance.
 const trees=[[-43,-42],[-38,-32],[-43,32],[-40,43],[40,-40],[43,-26],[43,32],[40,44],[-14,0],[14,0],[-15,-6],[15,6],[-15,7],[15,-7]];
-for(const [x,z] of trees){box(x,.75,z,.48,1.5,.48,0x735942);box(x,1.9,z,2.6,2.35,2.6,0x498e5f);box(x,2.7,z,1.55,.75,1.55,0x66ab6a);}
+for(const [x,z] of trees){
+ architecturalPiece(shellGeo,0x715844,x,1.03,z,.24,2.07,.24);
+ architecturalPiece(foliageGeo,0x406d54,x,2.64,z,1.05,1.2,1);
+ architecturalPiece(foliageGeo,0x5a8455,x+.49,2.82,z-.3,.78,.83,.8);
+ architecturalPiece(foliageGeo,0x74975a,x-.4,3.11,z+.2,.68,.74,.71);
+ colliders.push({x1:x-.24,x2:x+.24,z1:z-.24,z2:z+.24});
+}
 for(const x of [-37,37])for(const z of [-11,11])box(x,.18,z,3,.36,2,0x66915b);
 // One bench on each side of the central plaza; not cluttering the walking corridors.
 for(const x of [-11,11]){box(x,.6,0,1.3,.23,3,0x886b50,true);box(x,.95,0,.25,.8,3,0x8d7055,true);}
@@ -282,24 +339,94 @@ for(const [key,items] of staticBoxes){const inst=new THREE.InstancedMesh(unit,ma
  items.forEach((o,i)=>{dummy.position.set(o.x,o.y,o.z);dummy.scale.set(o.w,o.h,o.d);dummy.rotation.set(0,0,0);dummy.updateMatrix();inst.setMatrixAt(i,dummy.matrix);});
  inst.instanceMatrix.needsUpdate=true;scene.add(inst);
 }
-// Six low-poly employees, not dozens of independent animation loops.
-for(const b of buildings){const g=new THREE.Group(),uniform=mat(b.color),skin=mat(0xe5b893),pants=mat(0x394d5b);
- const mesh=(w,h,d,m,x,y,z)=>{const o=new THREE.Mesh(unit,m);o.scale.set(w,h,d);o.position.set(x,y,z);g.add(o);return o;};
- mesh(.72,.95,.42,uniform,0,1.35,0);mesh(.53,.52,.48,skin,0,2.12,0);
- const armL=mesh(.18,.84,.25,skin,-.51,1.3,0),armR=mesh(.18,.84,.25,skin,.51,1.3,0);
- const legL=mesh(.25,.8,.3,pants,-.2,.48,0),legR=mesh(.25,.8,.3,pants,.2,.48,0);
- g.position.set(b.x+4.5,0,b.z+b.side*8.7);scene.add(g);npc.push({g,armL,armR,legL,legR,homeX:b.x,baseZ:b.z+b.side*8.7,phase:b.x});
-}
-// Couriers/technicians cross the central plaza (lightweight block characters).
-for(let i=0;i<4;i++){
- const g=new THREE.Group(),u=mat([0xe5a65a,0x559ac1,0x689b77,0x8a79b5][i]),skin=mat(0xe2b998),pants=mat(0x374957);
- const part=(w,h,d,m,x,y,z)=>{const ob=new THREE.Mesh(unit,m);ob.position.set(x,y,z);ob.scale.set(w,h,d);g.add(ob);return ob;};
- part(.7,.9,.4,u,0,1.3,0);part(.55,.55,.5,skin,0,2.08,0);
- const armL=part(.2,.8,.25,skin,-.48,1.25,0),armR=part(.2,.8,.25,skin,.48,1.25,0);
- const legL=part(.23,.8,.29,pants,-.18,.46,0),legR=part(.23,.8,.29,pants,.18,.46,0);
- g.position.set(0,0,-10+i*6);scene.add(g);npc.push({g,armL,armR,legL,legR,homeX:0,baseZ:-10+i*6,phase:i});
-}
 
+for(const {geometry,color,items} of architecture.values()){
+ const mesh=new THREE.InstancedMesh(geometry,mat(color),items.length);
+ items.forEach((piece,i)=>{
+   dummy.position.set(piece.x,piece.y,piece.z);
+   dummy.scale.set(piece.w,piece.h,piece.d);
+   dummy.rotation.set(0,piece.angle,0);
+   dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
+ });
+ mesh.instanceMatrix.needsUpdate=true;scene.add(mesh);
+}
+const humanRound=new THREE.SphereGeometry(1,mobile?8:12,8);
+const humanTaper=new THREE.CylinderGeometry(.83,1,1,mobile?8:12);
+const humanShapes=new Set([unit,humanRound,humanTaper]);
+const outfits=[
+ {top:0x476d88,shirt:0x476d88,pants:0x303840,collar:0x6f9ab0},
+ {top:0x333943,shirt:0xe0e2dd,pants:0x333943,collar:0x4a5261,tie:0x733540},
+ {top:0x596b53,shirt:0x596b53,pants:0x9a8b6d,collar:0x77876a},
+ {top:0x263a53,shirt:0xe4e4db,pants:0x535968,collar:0x3f5874},
+ {top:0x55636c,shirt:0x586976,pants:0x343d43,collar:0x829098,work:true},
+ {top:0xada28a,shirt:0xeae6da,pants:0x484642,collar:0xc6ba9e}
+];
+function employeeModel(style,variation=0){
+ const g=new THREE.Group(),materials=new Map(),look=outfits[style%outfits.length]||outfits[0];
+ const skin=[0xe3b893,0xba825d,0x85553e,0xca9878,0x583b2e,0xeac3a9][variation%6];
+ const hair=[0x31241e,0x181816,0x392a25,0x6b4c34,0x201c1b,0x493025][variation%6];
+ function part(parent,geo,color,x,y,z,w,h,d,tilt=0){
+   if(!materials.has(color))materials.set(color,mat(color));
+   const mesh=new THREE.Mesh(geo,materials.get(color));
+   mesh.position.set(x,y,z);mesh.scale.set(w,h,d);mesh.rotation.z=tilt;
+   parent.add(mesh);return mesh;
+ }
+ const oval=(p,c,x,y,z,w,h,d,a=0)=>part(p,humanRound,c,x,y,z,w,h,d,a);
+ const block=(p,c,x,y,z,w,h,d,a=0)=>part(p,unit,c,x,y,z,w,h,d,a);
+ const taper=(p,c,x,y,z,w,h,d,a=0)=>part(p,humanTaper,c,x,y,z,w,h,d,a);
+ const pivot=(x,y,z,angle=0)=>{
+   const limb=new THREE.Group();limb.position.set(x,y,z);limb.rotation.z=angle;g.add(limb);return limb;
+ };
+ // The walking animation rotates shoulder and hip pivots; shoes and hands travel with them.
+ const armL=pivot(-.285,1.49,0,-.09),armR=pivot(.285,1.49,0,.09);
+ const legL=pivot(-.126,.96,0),legR=pivot(.126,.96,0);
+ for(const arm of [armL,armR]){
+   oval(arm,look.top,0,-.016,0,.098,.13,.103);
+   taper(arm,look.top,0,-.227,0,.076,.4,.079);
+   oval(arm,skin,0,-.469,-.009,.064,.105,.062);
+   block(arm,look.collar,0,-.397,0,.129,.052,.145);
+   if(look.work)block(arm,0xc8d0b2,0,-.29,0,.144,.05,.151);
+ }
+ for(const leg of [legL,legR]){
+   taper(leg,look.pants,0,-.335,0,.108,.66,.12);
+   taper(leg,look.pants,0,-.711,0,.087,.21,.091);
+   oval(leg,0x272824,0,-.865,-.068,.105,.078,.174);
+   block(leg,0x232621,0,-.91,-.073,.166,.043,.266);
+ }
+ oval(g,look.pants,0,.98,0,.245,.18,.145);
+ oval(g,look.top,0,1.277,0,.293,.373,.164);
+ block(g,look.shirt,0,1.403,-.137,.166,.345,.035);
+ for(const side of [-1,1]){
+   block(g,look.collar,side*.087,1.485,-.16,.08,.215,.036,side*.34);
+   oval(g,skin,side*.158,1.802,0,.038,.059,.039);
+ }
+ if(look.tie){
+   block(g,look.tie,0,1.363,-.17,.047,.338,.037);
+   block(g,look.tie,0,1.531,-.175,.053,.053,.035,Math.PI/4);
+ }
+ if(look.work)block(g,0xbbc4ac,0,1.323,-.156,.389,.056,.041);
+ if(variation%3===0)block(g,0xd8e0de,.13,1.377,-.161,.079,.052,.028);
+ taper(g,skin,0,1.594,0,.085,.165,.087);
+ oval(g,skin,0,1.815,0,.161,.205,.149);
+ oval(g,hair,0,1.956,.024,.173,.113,.167);
+ if(variation%3===1)oval(g,hair,.029,1.894,.119,.15,.197,.064);
+ // The face points towards -Z, matching player and NPC movement.
+ for(const side of [-1,1])oval(g,0x2d2724,side*.057,1.831,-.151,.02,.014,.012);
+ oval(g,skin,0,1.796,-.146,.029,.047,.037);
+ oval(g,0x754f43,0,1.738,-.137,.047,.01,.015);
+ return {g,armL,armR,legL,legR};
+}
+for(const [index,b] of buildings.entries()){
+ const model=employeeModel(b.id==='OPS'?4:index,index);
+ const baseZ=b.z+b.side*8.7;
+ model.g.position.set(b.x+4.5,0,baseZ);scene.add(model.g);
+ npc.push({...model,homeX:b.x,baseZ,phase:b.x});
+}
+for(let i=0;i<4;i++){
+ const model=employeeModel(i+2,i+2),baseZ=-10+i*6;
+ model.g.position.set(0,0,baseZ);scene.add(model.g);
+ npc.push({...model,homeX:0,baseZ,phase:i});
+}
 
 // Motor de incidentes. Todos os fatos e personagens correspondem às seis cartas de origem.
 let activeIncidentKey='', incident3D=null, activeClue=null;
@@ -311,14 +438,17 @@ function labelSprite(text,color=0xeed58c,wide=4.3){const cv=document.createEleme
  lines.forEach((line,i)=>c.fillText(line.slice(0,27),256,lines.length===1?94:57+i*72,472));
  const tex=new THREE.CanvasTexture(cv),o=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,depthTest:false,transparent:true}));o.scale.set(wide,wide*.375,1);return o;
 }
-function personMesh(parent,x,z,color,signText=''){const g=new THREE.Group();const torso=mat(color),skin=mat(0xdcb48f),pants=mat(0x344451);
- const add=(w,h,d,m,xx,yy,zz)=>{const o=new THREE.Mesh(unit,m);o.scale.set(w,h,d);o.position.set(xx,yy,zz);g.add(o);return o;};
- add(.72,.9,.43,torso,0,1.35,0);add(.54,.53,.49,skin,0,2.08,0);
- const aL=add(.19,.75,.25,skin,-.48,1.36,0),aR=add(.19,.75,.25,skin,.48,1.36,0),lL=add(.24,.8,.3,pants,-.2,.46,0),lR=add(.24,.8,.3,pants,.2,.46,0);
- if(signText){add(.07,.8,.08,mat(0x77563c),.64,2.37,0);const sg=labelSprite(signText,0xe78c74,2.15);sg.position.set(.64,3.22,0);g.add(sg);}
+function personMesh(parent,x,z,color,signText=''){
+ const variety=(x*3+z*5+color)>>>0;
+ const {g,armL:aL,armR:aR,legL:lL,legR:lR}=employeeModel(variety%6,variety%6);
+ if(signText){
+   const pole=new THREE.Mesh(unit,mat(0x665244));pole.scale.set(.06,.85,.06);
+   pole.position.set(.59,2.01,0);g.add(pole);
+   const sign=labelSprite(signText,0xe78c74,2.15);sign.position.set(.59,2.8,0);g.add(sign);
+ }
  g.position.set(x,0,z);parent.add(g);return {g,aL,aR,lL,lR,x0:x,z0:z,behavior:'waiting',step:0,wait:0};
 }
-function disposeIncident(){if(!incident3D)return;scene.remove(incident3D.group);incident3D.group.traverse(o=>{if(o.isSprite){o.material.map?.dispose();o.material.dispose();}else if(o.isMesh){if(o.geometry!==unit)o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();}});incident3D=null;activeIncidentKey='';}
+function disposeIncident(){if(!incident3D)return;scene.remove(incident3D.group);incident3D.group.traverse(o=>{if(o.isSprite){o.material.map?.dispose();o.material.dispose();}else if(o.isMesh){if(!humanShapes.has(o.geometry))o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();}});incident3D=null;activeIncidentKey='';}
 function createIncident(cardId){const sc=SCENARIOS[cardId];if(!sc)return;const b=buildings.find(x=>x.id===sc.focus),group=new THREE.Group(),actors=[],markers=[],props=[];
  const colors=[0xeccc80,0x8bdcb6,0x9ecaf2];for(const p of taskLocations(cardId)){
   const g=new THREE.Group();g.position.set(p.x,0,p.z);group.add(g);
@@ -631,18 +761,7 @@ function teamLabel(index){return 'Equipe '+(TEAM_NAMES[index]||String(index+1));
 function logEvent(team,run,what){run.events??=[];run.events.push({at:now(),by:identity?.name||'Mestre',what});if(run.events.length>45)run.events.shift();}
 function showNote(text){inform(text,3300);}
 function showBanner(text,ms=4200){const el=$('liveBanner');el.textContent=text;el.hidden=false;clearTimeout(window._nexusBanner);window._nexusBanner=setTimeout(()=>el.hidden=true,ms);}
-function logout(){if(onlineMode){logoutOnline();return;}if(ownAvatar){scene.remove(ownAvatar.g);ownAvatar=null;}thirdPerson=false;identity=null;game=null;peers.clear();for(const a of avatars.values())scene.remove(a.g);avatars.clear();channel?.close?.();channel=null;
- $('liveOverlay').classList.add('liveShow');$('livePanel').hidden=true;$('incidentStrip').hidden=true;disposeIncident();resetInputs();paused=true;
- $('joinInfo').textContent='NEXUS conectado somente ao novo Firebase. Login exigido para competir online.';}
-function enterGame(role){const name=String($('playerName').value||'').trim().slice(0,24),room=roomName(),team=Number($('teamPick').value)||0,color=Number($('avatarPick').value)||0;
- if(!name){$('joinInfo').textContent='Digite um nome para seu personagem.';return;}
- if(role==='team'&&(team<0||team>5)){showNote('Equipe inválida.');return;}
- identity={id:myId,room,name,role,team,color};roomKey=storageKey(room);game=loadGame(room);if(team>=game.teamCount&&role==='team'){
- $('joinInfo').textContent='Esta equipe ainda não está ativada pelo Mestre. Selecione uma equipe disponível.';identity=null;return;}
- masterWatching=0;peers.clear();try{channel=new BroadcastChannel('nexus_coop_'+room);channel.onmessage=e=>handleMessage(e.data);}catch(e){channel=null;}
- $('liveOverlay').classList.remove('liveShow');paused=false;meetingUnlocked=false;lastRoundSeen=game.round;
- refreshWorld();openPanel();showBanner(role==='master'?'CENTRAL DO MESTRE — MODO LOCAL':'BEM-VINDO, '+name+' · '+teamLabel(team));
- send({type:'join',name,team,color,role,x:px,z:pz,yaw});}
+function logout(){if(identity) return logoutOnline();}
 function handleMessage(m){if(onlineMode||!identity||!m||m.src===myId||m.room!==identity.room)return;
  if(m.type==='game')receiveGame(m.game);
  if(m.type==='join'||m.type==='pose'){const peer={name:m.name,team:m.team,role:m.role,color:m.color,x:Number(m.x)||0,z:Number(m.z)||0,yaw:Number(m.yaw)||0,jump:Math.max(0,Number(m.jump)||0),last:now()};peers.set(m.src,peer);if(m.type==='join')send({type:'pose',name:identity.name,team:identity.team,color:identity.color,role:identity.role,x:px,z:pz,yaw,jump:Math.max(0,py-eyeHeight)});}
@@ -847,13 +966,13 @@ function masterDashboard(){let h=`<div class="liveBox"><h2>Central do Mestre · 
  return `<details><summary>${teamLabel(i)} · ${imp?'Plano implantado':'Sem implementação'} · abrir avaliação</summary><p><b>Crise:</b> ${esc(getCard(r.cardId).titulo)}</p><p><b>Evidências:</b> ${Object.keys(r.evidence).length}/3 · <b>Consultorias:</b> ${Object.keys(r.consultations||{}).length}</p><p><b>Plano:</b> ${esc(imp?.policy?policySummary(r.cardId,imp.policy):'Não implementado')}</p><p><b>Desfecho:</b> ${esc(imp?.outcome||'Pendente')}</p><p><b>Últimas ações:</b></p><ul class="eventList">${(r.events||[]).slice(-12).map(e=>`<li>${esc(e.by)}: ${esc(e.what)}</li>`).join('')}</ul><div class="liveGrid two">${GRADE.map(([key,title,max])=>`<label>${esc(title)} / ${max}<input id="grade_${i}_${key}" type="number" min="0" max="${max}" value="0" step="1"></label>`).join('')}</div><label>Devolutiva<textarea id="masterComment${i}" maxlength="500" placeholder="Justifique a nota e os impactos observados..."></textarea></label><button class="liveAccent" data-grade="${i}">Publicar avaliação</button></details>`;
  }).join('<hr>')}</div>`;
  if(game.completed||game.round>=game.maxRounds){const order=game.teams.slice(0,game.teamCount).map((t,i)=>({name:teamLabel(i),score:t.score})).sort((a,b)=>b.score-a.score);h+=`<div class="liveBox"><h3>🏆 Classificação</h3>${order.map((o,i)=>`<div class="liveScore">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)} ${esc(o.name)}<b>${o.score} pts</b></div>`).join('')}</div>`;}
- h+=`<div class="liveBox"><button id="exportGame">↓ Exportar registro JSON da competição</button><button id="resetGame" class="liveDanger">Reiniciar competição</button><p class="liveSmall">${onlineMode?'ONLINE: mantenha a conta do Mestre aberta para processar ações e publicar estados das equipes.':'DEMONSTRAÇÃO LOCAL: resultados não sincronizados na internet.'}</p></div>`;return h;}
+ h+=`<div class="liveBox"><button id="exportGame">↓ Exportar registro JSON da competição</button><button id="resetGame" class="liveDanger">Reiniciar competição</button><p class="liveSmall">Mantenha a sessão do Mestre aberta durante a partida.</p></div>`;return h;}
 function showOverview(){const t=currentTeam(),r=currentRun();return `<div class="liveBox"><h2>${identity.role==='master'?'Painel do Mestre':teamLabel(identity.team)+' · '+identity.name}</h2><div class="stats"><span>◈ Orçamento<br><b>${t.budget}</b></span><span>♡ Confiança<br><b>${t.trust}%</b></span><span>▣ Produtividade<br><b>${t.prod}%</b></span><span>✦ Reputação<br><b>${t.rep}%</b></span></div><p class="liveSmall">Indicadores persistem entre rodadas. O orçamento é consumido ao implementar soluções.</p></div>`;}
 function openPanel(){if(!identity){$('liveOverlay').classList.add('liveShow');return;}$('mapModal').classList.remove('show');$('menuModal').classList.remove('show');$('livePanel').hidden=false;paused=true;resetInputs();document.exitPointerLock?.();renderPanel();}
 function closePanel(){$('livePanel').hidden=true;paused=false;meetingUnlocked=false;}
 function renderPanelIfOpen(){if(!identity||$('livePanel').hidden)return;const a=document.activeElement;if(a&&$('livePanel').contains(a)&&['INPUT','TEXTAREA','SELECT'].includes(a.tagName))return;renderPanel();}
-function renderPanel(){if(!identity||!game)return;const b=$('livePanelBody');$('panelSubtitle').textContent=identity.role==='master'?'Central de Controle · '+(onlineMode?'ONLINE FIREBASE':'MODO LOCAL'):'Missão cooperativa · '+teamLabel(identity.team)+(onlineMode?' · ONLINE':' · LOCAL');
- b.innerHTML=showOverview()+(identity.role==='master'?masterDashboard():showMission())+`<div class="liveBox"><button id="logoutGame">Trocar personagem / sair</button></div>`;
+function renderPanel(){if(!identity||!game)return;const b=$('livePanelBody');$('panelSubtitle').textContent=identity.role==='master'?'Central de Controle · ONLINE FIREBASE':'Missão cooperativa · '+teamLabel(identity.team);
+ b.innerHTML=showOverview()+(identity.role==='master'?masterDashboard():showMission())+`<div class="liveBox"><button id="logoutGame">Sair da conta</button></div>`;
  const click=(id,cb)=>{const el=$(id);if(el)el.onclick=cb;};click('logoutGame',()=>{if(!onlineMode)send({type:'bye'});logout();});
  if(identity.role==='master'){click('startRound',masterStart);click('stopTime',masterStop);click('endGame',masterEnd);click('saveSettings',masterSettings);click('postMessage',masterMessage);click('resetGame',resetGame);click('exportGame',exportGame);
   const sel=$('watchTeam');if(sel)sel.onchange=()=>{masterWatching=Number(sel.value);if(onlineMode)onlineWatchPresence(masterWatching);disposeIncident();refreshWorld();renderPanel();};
@@ -875,21 +994,24 @@ window.nexusOpenPanel=openPanel;
 $('closeLive').onclick=closePanel;
 $('terminalBtn').textContent='▣ ATIVIDADES';
 $('terminalBtn').onclick=openPanel;
-$('enterMaster').onclick=()=>{ $('localTeamLabel').hidden=false;enterGame('master');};$('enterTeam').onclick=()=>{ $('localTeamLabel').hidden=false;enterGame('team');};$('enterOnline').onclick=enterOnline;
+$('enterOnline').onclick=enterOnline;
+$('loginPass').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();enterOnline();}});
 $('resumeGame').onclick=()=>{if(identity){$('liveOverlay').classList.remove('liveShow');paused=false;}else showNote('Entre no jogo primeiro.');};
 $('menuBtn').textContent='☰';
-const oldMenu=$('menuCard');oldMenu.insertAdjacentHTML('beforeend','<button id="viewToggle">◈ Alternar câmera (V)</button><button id="openMissionMenu">▣ Abrir atividades</button>');
+const oldMenu=$('menuCard');oldMenu.insertAdjacentHTML('beforeend','<button id="viewToggle">◈ Alternar câmera (V)</button><button id="openMissionMenu">▣ Abrir atividades</button><button id="logoutMenu">Sair da conta</button>');
+$('logoutMenu').onclick=()=>{ $('menuModal').classList.remove('show');logout();};
 $('openMissionMenu').onclick=()=>{ $('menuModal').classList.remove('show');openPanel();};
 let thirdPerson=false,ownAvatar=null;
 function toggleView(){thirdPerson=!thirdPerson;showNote(thirdPerson?'Câmera externa ativada':'Câmera em primeira pessoa');}
 $('viewToggle').onclick=()=>{$('menuModal').classList.remove('show');paused=false;toggleView();};
 window.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='v'&&identity&&!paused){toggleView();}},false);
-function makeAvatar(name,color){const group=new THREE.Group(),coat=mat(PROFILE_COLORS[color%PROFILE_COLORS.length]),face=mat(0xdfb692),trousers=mat(0x3a435a);
- const piece=(w,h,d,material,x,y,z)=>{const q=new THREE.Mesh(unit,material);q.scale.set(w,h,d);q.position.set(x,y,z);group.add(q);return q;};
- piece(.75,.88,.4,coat,0,1.32,0);piece(.55,.54,.48,face,0,2.05,0);const l=piece(.23,.85,.28,trousers,-.22,.47,0),r=piece(.23,.85,.28,trousers,.22,.47,0);
- const al=piece(.18,.8,.25,coat,-.5,1.3,0),ar=piece(.18,.8,.25,coat,.5,1.3,0);
- const tag=labelSprite(name.toUpperCase().slice(0,14),PROFILE_COLORS[color%PROFILE_COLORS.length],3.15);tag.position.y=3.13;group.add(tag);scene.add(group);
- return {g:group,al,ar,l,r,x:0,z:0};}
+function makeAvatar(name,color){
+ const variety=Array.from(name).reduce((hash,char)=>(hash*31+char.codePointAt(0))>>>0,7)%6;
+ const {g,armL:al,armR:ar,legL:l,legR:r}=employeeModel(color,variety);
+ const tag=labelSprite(name.toUpperCase().slice(0,14),PROFILE_COLORS[color%PROFILE_COLORS.length],3.15);
+ tag.position.y=2.66;g.add(tag);scene.add(g);
+ return {g,al,ar,l,r,x:0,z:0};
+}
 function animateAvatars(t,dt){const visibleTeam=myTeam();if(!identity)return;
  for(const [id,p] of peers){if(now()-p.last>9000){peers.delete(id);const a=avatars.get(id);if(a){scene.remove(a.g);avatars.delete(id);}continue;}
  const visible=p.role==='team'&&p.team===visibleTeam;if(!visible){const a=avatars.get(id);if(a)a.g.visible=false;continue;}
@@ -919,7 +1041,9 @@ setInterval(heartbeat,420);
 function onlineStatus(message){const el=$('onlineState');if(el)el.textContent=message;}
 function onlineError(error){
  const code=error?.code||''; const hints={
-  'auth/invalid-credential':'E-mail ou senha inválidos. Confira sua conta no Firebase Authentication.',
+  'auth/invalid-credential':'Senha inválida para o perfil selecionado.',
+  'auth/wrong-password':'Senha inválida para o perfil selecionado.',
+  'auth/user-not-found':'A conta deste perfil não está cadastrada no Firebase.',
   'auth/invalid-email':'E-mail inválido.',
   'auth/too-many-requests':'Muitas tentativas. Aguarde antes de tentar novamente.',
   'auth/network-request-failed':'Falha na internet ou no acesso ao Firebase.',
@@ -943,19 +1067,23 @@ function ensureFirebase(){if(typeof firebase==='undefined'||!firebase?.initializ
  return true;}
 async function enterOnline(){if(onlineBusy)return;onlineBusy=true;$('enterOnline').disabled=true;onlineStatus('Autenticando no Firebase...');
  try{
-  ensureFirebase();const email=String($('loginEmail').value||'').trim().toLowerCase(),password=$('loginPass').value;
-  const profile=onlineSessionEmail(email),name=String($('playerName').value||'').trim().slice(0,24),color=Number($('avatarPick').value)||0;
-  if(!profile)throw new Error('Entre com uma das seis contas de equipe ou com a conta do Mestre.');
-  if(!name)throw new Error('Informe o nome do seu personagem.');
-  if(!password)throw new Error('Informe a senha do Firebase Authentication.');
+  const selection=$('loginProfile').value,password=$('loginPass').value;
+  if(selection!=='master'&&!/^[1-6]$/.test(selection))throw new Error('Selecione Mestre ou sua equipe.');
+  if(!password)throw new Error('Informe a senha do perfil selecionado.');
+  const email=selection==='master'?MASTER_EMAIL:'equipe'+selection+'@cyberrh.example';
+  ensureFirebase();
   const user=(await fbAuth.signInWithEmailAndPassword(email,password)).user;
-  if(!user||user.email?.toLowerCase()!==email){await fbAuth.signOut();throw new Error('Conta autenticada não corresponde ao e-mail informado.');}
-  // Nunca aceitar role selecionado pelo HTML: cargo derivado somente da conta autenticada.
+  if(!user||user.email?.toLowerCase()!==email){await fbAuth.signOut();throw new Error('A conta autenticada não corresponde ao perfil selecionado.');}
+  const profile=onlineSessionEmail(user.email);
+  if(!profile)throw new Error('Conta sem perfil no NEXUS.');
+  const defaultName=profile.role==='master'?'Mestre':'Jogador '+myId.slice(-5).toUpperCase();
+  const name=$('playerName').value.trim().slice(0,24)||defaultName;
+  const color=Number($('avatarPick').value)||0;
   const room=roomName();onlineMode=true;onlineReady=false;onlinePublic=null;onlineView=null;
   identity={id:myId,uid:user.uid,room,name,role:profile.role,team:profile.team,color};
   roomKey='';game=null;peers.clear();masterWatching=0;meetingUnlocked=false;lastRoundSeen=0;lastStageSeen=0;
   fbRoomPath=NEXUS_ROOT+'/'+room;fbRoom=fbDb.ref(fbRoomPath);
-  sessStore.setItem('nexus_name',name);sessStore.setItem('nexus_color',String(color));
+  sessStore.setItem('nexus_name',$('playerName').value.trim());sessStore.setItem('nexus_color',String(color));
   try{fbDb.ref('.info/serverTimeOffset').on('value',s=>{firebaseTimeOffset=Number(s.val())||0;});}catch(e){}
   $('loginPass').value='';$('liveOverlay').classList.remove('liveShow');paused=false;
   onlineStatus('Autenticado: '+(profile.role==='master'?'Mestre':'Equipe '+(profile.team+1))+'. Sincronizando...');
@@ -1178,9 +1306,7 @@ const lastName=sessStore.getItem('nexus_name');if(lastName)$('playerName').value
 const lastColor=sessStore.getItem('nexus_color');if(lastColor)$('avatarPick').value=lastColor;
 // Authentication credentials are NEVER persisted by the game code itself; Firebase maintains its own auth session.
 
-window.__nexusCoop={version:5,transport:'firebase-auth-realtime',get:()=>game,identity:()=>identity,enter:(role,team=0,name='Teste',room='NEXUS01')=>{ $('roomCode').value=room;$('playerName').value=name;$('teamPick').value=String(team);enterGame(role);},
- masterStart,stop:masterStop,start:masterStart,investigate:(i)=>{const r=currentRun();if(r){activeClue=taskLocations(r.cardId)[i];$('incidentCollect').click();}},
- meeting:()=>{meetingUnlocked=true;openPanel();},propose:proposePolicy,vote:votePlan,deploy:deployPlan,watch:t=>{masterWatching=t;refreshWorld();},players:()=>[...peers.values()],world:()=>activeIncidentKey};
+
 paused=true;
 
 })();
